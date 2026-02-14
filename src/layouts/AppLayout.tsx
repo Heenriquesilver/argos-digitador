@@ -31,7 +31,7 @@ const menuItems = [
   { label: "Processos", icon: <EventIcon />, path: "/processo" },
   { label: "Calculos", icon: <PeopleIcon />, path: "/profissionais" },
   { label: "Documentos", icon: <PeopleIcon />, path: "/documentos" },
-  { label: "Comunicacao", icon: <PeopleIcon />, path: "/documentos" },
+  { label: "Comunicacao", icon: <PeopleIcon />, path: "/comunicacao" },
 
   { label: "Qualidade", icon: <PeopleIcon />, path: "/profissionais" },
   { label: "Empreitadas", icon: <PeopleIcon />, path: "/profissionais" },
@@ -60,6 +60,10 @@ export default function AppLayout() {
       "& .MuiListItemIcon-root": { color: "#fff" },
       "&:hover": { bgcolor: "#5c6cff" },
     },
+  };
+
+  const handleMenu = () => {
+    setOpen(!open);
   };
 
   return (
@@ -120,11 +124,23 @@ export default function AppLayout() {
         }}
       >
         <IconButton
-          onClick={() => setOpen(!open)}
+          onClick={handleMenu}
+          disableRipple
           sx={{
-            bgcolor: "#fff",
+            bgcolor: open ? "#fff" : "#5c6cff",
+            color: open ? "#000" : "#fff",
             boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-            "&:hover": { bgcolor: "#5c6cff" },
+            "&:hover": {
+              bgcolor: "#5c6cff",
+              color: "#fff",
+            },
+            "&:focus": {
+              outline: "none",
+            },
+
+            "&:focus-visible": {
+              outline: "none",
+            },
           }}
         >
           <MenuIcon />
