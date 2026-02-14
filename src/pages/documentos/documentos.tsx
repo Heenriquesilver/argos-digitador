@@ -2,35 +2,21 @@ import {
   Box,
   Typography,
   Button,
-  IconButton,
   TextField,
   InputAdornment,
 } from "@mui/material";
+import type { TDocumento } from "./types";
 import Grid from "@mui/material/GridLegacy";
 import { DataGrid } from "@mui/x-data-grid";
 import { useState } from "react";
-import type { GridColDef } from "@mui/x-data-grid";
 import FilterListIcon from "@mui/icons-material/FilterList";
-
 import SearchIcon from "@mui/icons-material/Search";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import DescriptionIcon from "@mui/icons-material/Description";
-import TableChartIcon from "@mui/icons-material/TableChart";
+import { Columns } from "./utils";
 
-type DocumentoRow = {
-  id: number;
-  nome: string;
-  descricao: string;
-  processo: string;
-  data: string;
-  tamanho: string;
-  tipo: string;
-};
 export default function DocumentosPage() {
   const [busca, setBusca] = useState("");
 
-  const rows: DocumentoRow[] = [
+  const rows: TDocumento[] = [
     {
       id: 1,
       nome: "Sentença_Procedente_Parte.pdf",
@@ -57,68 +43,6 @@ export default function DocumentosPage() {
       data: "13 Out, 16:45",
       tamanho: "1.1 MB",
       tipo: "doc",
-    },
-  ];
-
-  const getIcon = (tipo: string) => {
-    if (tipo === "pdf")
-      return <PictureAsPdfIcon sx={{ color: "#DC2626", mr: 1 }} />;
-    if (tipo === "xls")
-      return <TableChartIcon sx={{ color: "#16A34A", mr: 1 }} />;
-    return <DescriptionIcon sx={{ color: "#2563EB", mr: 1 }} />;
-  };
-
-  const columns: GridColDef<DocumentoRow>[] = [
-    {
-      field: "nome",
-      headerName: "Documento",
-      flex: 2,
-      headerClassName: "cor-background-headerName",
-      renderCell: (params) => (
-        <Box display="flex" alignItems="center">
-          {getIcon(params.row.tipo)}
-          <Box>
-            <Typography fontSize={14} fontWeight={500}>
-              {params.row.nome}
-            </Typography>
-            <Typography fontSize={12} color="text.secondary">
-              {params.row.descricao}
-            </Typography>
-          </Box>
-        </Box>
-      ),
-    },
-    {
-      field: "processo",
-      headerName: "Processo",
-      flex: 1,
-      headerClassName: "cor-background-headerName",
-    },
-    {
-      field: "data",
-      headerName: "Data",
-      flex: 1,
-      headerClassName: "cor-background-headerName",
-    },
-    {
-      field: "tamanho",
-      headerName: "Tam.",
-      flex: 0.7,
-      headerClassName: "cor-background-headerName",
-    },
-    {
-      field: "acoes",
-      headerName: "Ações",
-      sortable: false,
-      filterable: false,
-      align: "right",
-      headerAlign: "right",
-      headerClassName: "cor-background-headerName",
-      renderCell: () => (
-        <IconButton size="small">
-          <MoreVertIcon />
-        </IconButton>
-      ),
     },
   ];
 
@@ -189,7 +113,7 @@ export default function DocumentosPage() {
       >
         <DataGrid
           rows={rows}
-          columns={columns}
+          columns={Columns}
           disableRowSelectionOnClick
           pageSizeOptions={[5]}
           initialState={{
@@ -202,10 +126,7 @@ export default function DocumentosPage() {
               fontWeight: "bold",
             },
             "& .cor-background-headerName": {
-              backgroundColor: "#b1b8f8ff",
-            },
-            "& .MuiDataGrid-row:hover": {
-              backgroundColor: "#F3F4F6",
+              backgroundColor: "#E0E7FF",
             },
           }}
         />
