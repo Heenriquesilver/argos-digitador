@@ -33,7 +33,7 @@ export default function HomePage() {
       <Grid container alignItems="center" mb={4}>
         <Grid item xs={12} md={6}>
           <Typography variant="h5" fontWeight={600} color="text.primary">
-            Welcome Back, {user?.person?.name || user?.email}
+            Welcome Back, {user?.pessoaFisica.nome || user?.email}
           </Typography>
           <Typography color="text.secondary">
             Here is a summary of the performance of your intelligent agents.

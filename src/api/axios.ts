@@ -1,10 +1,12 @@
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: "http://138.255.160.161:8000/api/v1",
+const apiPublic = axios.create({
+  baseURL: "http://138.255.160.161:9092",
   headers: {
     "Content-Type": "application/json",
+    Accept: "application/json",
   },
+  withCredentials: true,
 });
 
-export default api;
+export default apiPublic;
