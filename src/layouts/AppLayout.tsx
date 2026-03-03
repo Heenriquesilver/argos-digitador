@@ -40,6 +40,8 @@ const menuItems = [
   { label: "Clientes", icon: <PeopleIcon />, path: "/profissionais" },
   { label: "Contratos", icon: <PeopleIcon />, path: "/profissionais" },
   { label: "Cartilhas", icon: <PeopleIcon />, path: "/profissionais" },
+  { label: "Empresas", icon: <PeopleIcon />, path: "/profissionais" },
+  { label: "Usuarios", icon: <PeopleIcon />, path: "/profissionais" },
 ];
 
 export default function AppLayout() {
