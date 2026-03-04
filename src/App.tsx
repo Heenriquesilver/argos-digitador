@@ -10,6 +10,8 @@ import NovoProcessoPage from "./pages/novoProcesso/NovoProcessoPage";
 import ProcessoPage from "./pages/processo/processoPage";
 import DocumentosPage from "./pages/documentos/documentos";
 import DistribuicaoCarga from "./pages/distribuicaoCarga/distribuicaoCarga";
+import EmpresasPage from "./pages/empresas/empresasPage";
+import UsuariosPage from "./pages/usuarios/usuariosPage";
 
 export default function App() {
   return (
@@ -31,6 +33,8 @@ export default function App() {
             <Route path="/processo" element={<ProcessoPage />} />
             <Route path="/documentos" element={<DocumentosPage />} />
             <Route path="/distribuicao-carga" element={<DistribuicaoCarga />} />
+            <Route path="/empresas" element={<EmpresasPage />} />
+            <Route path="/usuarios" element={<UsuariosPage />} />
             {/* futuras páginas entram aqui */}
             {/* <Route path="/agenda" element={<AgendaPage />} /> */}
           </Route>

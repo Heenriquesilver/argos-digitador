@@ -24,6 +24,7 @@ export function AuthProvider({ children }: Props) {
       // Salva tokens e usuário
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
+      localStorage.setItem("IdEntidadePai", res.data.usuario.id);
       localStorage.setItem("user", JSON.stringify(res.data.usuario));
       localStorage.setItem(
         "usuario",
