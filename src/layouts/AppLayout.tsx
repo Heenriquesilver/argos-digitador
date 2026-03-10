@@ -29,7 +29,7 @@ const drawerWidth = 240;
 const menuItems = [
   { label: "Home", icon: <HomeIcon />, path: "/home" },
   { label: "Processos", icon: <EventIcon />, path: "/processo" },
-  { label: "Calculos", icon: <PeopleIcon />, path: "/profissionais" },
+  { label: "Calculos", icon: <PeopleIcon />, path: "calculos" },
   { label: "Documentos", icon: <PeopleIcon />, path: "/documentos" },
   { label: "Comunicacao", icon: <PeopleIcon />, path: "/comunicacao" },
 

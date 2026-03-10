@@ -1,25 +1,32 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./auth/authProvider";
 
+// Páginas
 import LoginPage from "./pages/login/login";
 import HomePage from "./pages/home/home";
-import PrivateRoute from "./routes/privateRoute";
-import AppLayout from "./layouts/AppLayout";
 import ExecutionCenterPage from "./pages/executionCenter/execucionCenterPage";
 import NovoProcessoPage from "./pages/novoProcesso/NovoProcessoPage";
 import ProcessoPage from "./pages/processo/processoPage";
 import DocumentosPage from "./pages/documentos/documentos";
 import DistribuicaoCarga from "./pages/distribuicaoCarga/distribuicaoCarga";
 import EmpresasPage from "./pages/empresas/empresasPage";
+import NovaEmpresaPage from "./pages/empresas/nova-empresa/novaEmpresaPage";
 import UsuariosPage from "./pages/usuarios/usuariosPage";
+import CalculoPage from "./pages/calculo/CalculoPage";
+
+// Layout e Rotas Privadas
+import PrivateRoute from "./routes/privateRoute";
+import AppLayout from "./layouts/AppLayout";
 
 export default function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
+          {/* Rota pública de login */}
           <Route path="/" element={<LoginPage />} />
 
+          {/* Rotas privadas */}
           <Route
             element={
               <PrivateRoute>
@@ -34,8 +41,12 @@ export default function App() {
             <Route path="/documentos" element={<DocumentosPage />} />
             <Route path="/distribuicao-carga" element={<DistribuicaoCarga />} />
             <Route path="/empresas" element={<EmpresasPage />} />
+            <Route path="/empresas/:id/editar" element={<NovaEmpresaPage />} />
+            <Route path="/nova-empresa" element={<NovaEmpresaPage />} />
             <Route path="/usuarios" element={<UsuariosPage />} />
-            {/* futuras páginas entram aqui */}
+            <Route path="/calculos" element={<CalculoPage />} />
+
+            {/* Futuras páginas podem ser adicionadas aqui */}
             {/* <Route path="/agenda" element={<AgendaPage />} /> */}
           </Route>
         </Routes>

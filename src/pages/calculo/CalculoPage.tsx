@@ -37,7 +37,7 @@ type ProcessoRow = {
   prazo: string;
 };
 
-export default function ProcessoPage() {
+export default function CalculoPage() {
   const navigate = useNavigate();
 
   const [openFilter, setOpenFilter] = useState(false);
@@ -230,7 +230,7 @@ export default function ProcessoPage() {
       <Grid container alignItems="center" mb={4}>
         <Grid item xs={12} md={6}>
           <Typography variant="h5" fontWeight={600} color="text.primary">
-            Dashboard de Processos
+            Dashboard de Calculos
           </Typography>
           <Typography color="text.secondary">
             Monitoramento e gestão em tempo real.

@@ -42,7 +42,7 @@ export default function UsuariosPage() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<TUsuario | null>(null);
 
-  const entidadePai = localStorage.getItem("IdEntidadePai");
+  const entidadePai = localStorage.getItem("idEntidadeUsuarioLogado");
 
   console.log("EntidadePai", entidadePai);
 

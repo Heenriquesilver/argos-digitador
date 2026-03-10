@@ -114,7 +114,7 @@ export default function DistribuicaoCarga() {
       <Grid container alignItems="center" mb={4}>
         <Grid item xs={12} md={6}>
           <Typography variant="h5" fontWeight={600} color="text.primary">
-            Distribuição de Carga
+            Distribuição de Processos
           </Typography>
           <Typography color="text.secondary">
             Gerencie a alocação de processos e equilibre a demanda da equipe.

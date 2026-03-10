@@ -1,3 +1,4 @@
+// EmpresasPage.tsx
 import {
   Box,
   Typography,
@@ -14,15 +15,21 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { ptBR } from "@mui/x-data-grid/locales";
 import Grid from "@mui/material/GridLegacy";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import api from "../../api/axios";
 
-interface TEmpresa {
-  id: number;
-  nome: string;
+type TEmpresa = {
+  id?: number;
+  idEntidade?: number; // ESSENCIAL para o update
   cnpj: string;
-}
+  nomeFantasia: string;
+  cep: string;
+  endereco: string;
+  cidade: string;
+  uf: string;
+};
 
 export default function EmpresasPage() {
   const [busca, setBusca] = useState("");
@@ -32,12 +39,27 @@ export default function EmpresasPage() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<TEmpresa | null>(null);
 
+  const navigate = useNavigate();
+
   const handleOpenMenu = (
     event: React.MouseEvent<HTMLElement>,
-    row: TEmpresa,
+    row: any, // row do DataGrid
   ) => {
     setAnchorEl(event.currentTarget);
-    setSelectedRow(row);
+    setSelectedRow({
+      id: row.id,
+      idEntidade: row.idEntidade, // <- CORRETO
+      cnpj: row.cnpj,
+      nomeFantasia: row.nomeFantasia || row.razaoSocial,
+      cep: row.cep,
+      endereco: row.endereco,
+      cidade: row.cidade,
+      uf: row.uf,
+    });
+    console.log("handleOpenMenu -> selectedRow:", {
+      id: row.id,
+      idEntidade: row.idEntidade,
+    });
   };
 
   const handleCloseMenu = () => {
@@ -72,6 +94,18 @@ export default function EmpresasPage() {
       headerClassName: "cor-background-headerName",
     },
     {
+      field: "cidade",
+      headerName: "Cidade",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "uf",
+      headerName: "UF",
+      width: 90,
+      headerClassName: "cor-background-headerName",
+    },
+    {
       field: "acoes",
       headerName: "Ações",
       sortable: false,
@@ -92,28 +126,26 @@ export default function EmpresasPage() {
 
   const handleBuscar = async () => {
     if (!busca.trim()) return;
-
     try {
       setLoading(true);
-
       const endpoint = buscarPorCnpj
         ? "/api/v1/pessoa_juridica/cnpj"
         : "/api/v1/pessoa_juridica/nome";
-
       const paramName = buscarPorCnpj ? "cnpj" : "nome";
-
       const response = await api.get(endpoint, {
-        params: {
-          [paramName]: busca,
-          page: 0,
-          size: 10,
-        },
+        params: { [paramName]: busca, page: 0, size: 10 },
       });
 
       const empresas = response.data.elements.map((item: any) => ({
         id: item.id,
         nome: item.nomeFantasia || item.razaoSocial,
         cnpj: item.cnpj,
+        cep: item.cep,
+        endereco: item.endereco,
+        cidade: item.cidade,
+        uf: item.uf,
+        idEntidade: item.entidade?.id, // <- ESSENCIAL
+        nomeFantasia: item.nomeFantasia || item.razaoSocial,
       }));
 
       setRows(empresas);
@@ -148,9 +180,16 @@ export default function EmpresasPage() {
         </Grid>
       </Grid>
 
-      {/* CAMPO DE BUSCA */}
-      <Box mb={2} sx={{ display: "flex", gap: "5px" }}>
-        <Box>
+      {/* BUSCA */}
+      <Box
+        mb={2}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Box sx={{ display: "flex", gap: "5px" }}>
           <TextField
             fullWidth
             placeholder={
@@ -158,11 +197,7 @@ export default function EmpresasPage() {
             }
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            sx={{
-              backgroundColor: "#F3F4F6",
-              borderRadius: 2,
-              width: "600px",
-            }}
+            sx={{ backgroundColor: "#F3F4F6", borderRadius: 2, width: "600px" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -171,22 +206,22 @@ export default function EmpresasPage() {
               ),
             }}
           />
-        </Box>
-        <Box>
           <Button
             variant="contained"
             onClick={handleBuscar}
             disabled={loading}
-            sx={{
-              bgcolor: "#5c6cff",
-              px: 7,
-              height: "55px",
-              margin: "0 auto",
-            }}
+            sx={{ bgcolor: "#5c6cff", px: 7, height: "55px" }}
           >
             Buscar
           </Button>
         </Box>
+        <Button
+          variant="contained"
+          sx={{ bgcolor: "#5c6cff", px: 5, height: "55px" }}
+          onClick={() => navigate("/nova-empresa")}
+        >
+          Adicionar Empresa
+        </Button>
       </Box>
 
       {/* CHECKBOX */}
@@ -213,23 +248,35 @@ export default function EmpresasPage() {
           localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
           pageSizeOptions={[10]}
           initialState={{
-            pagination: {
-              paginationModel: { pageSize: 10, page: 0 },
-            },
+            pagination: { paginationModel: { pageSize: 10, page: 0 } },
           }}
           sx={{
-            "& .MuiDataGrid-columnHeaderTitle": {
-              fontWeight: "bold",
-            },
-            "& .cor-background-headerName": {
-              backgroundColor: "#E0E7FF",
-            },
+            "& .MuiDataGrid-columnHeaderTitle": { fontWeight: "bold" },
+            "& .cor-background-headerName": { backgroundColor: "#E0E7FF" },
           }}
         />
         <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
           <MenuItem onClick={() => alert("okey")}>Tornar Cliente</MenuItem>
           <MenuItem onClick={handleRecusar}>Criar Campanha de Lead</MenuItem>
           <MenuItem onClick={() => alert("okey")}>Inativar</MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (selectedRow) {
+                console.log("selectedRow antes do navigate:", selectedRow);
+                // Envia para a página de edição com idEntidade incluso
+                navigate(`/empresas/${selectedRow.id}/editar`, {
+                  state: {
+                    ...selectedRow,
+                    idEntidade: selectedRow.idEntidade ?? selectedRow.id,
+                    // Garante que idEntidade esteja preenchido
+                  },
+                });
+              }
+              handleCloseMenu();
+            }}
+          >
+            Editar
+          </MenuItem>
         </Menu>
       </Box>
     </Box>

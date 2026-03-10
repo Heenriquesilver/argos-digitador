@@ -8,6 +8,7 @@ interface LoginPayload {
 const saveAuth = (data: any) => {
   localStorage.setItem("accessToken", data.accessToken);
   localStorage.setItem("refreshToken", data.refreshToken);
+
   localStorage.setItem("user", JSON.stringify(data.usuario));
   localStorage.setItem(
     "usuario",
