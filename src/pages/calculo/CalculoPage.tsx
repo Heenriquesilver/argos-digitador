@@ -147,8 +147,8 @@ export default function CalculoPage() {
       headerClassName: "cor-background-headerName",
     },
     {
-      field: "tribunal",
-      headerName: "Tribunal",
+      field: "responsavel",
+      headerName: "Responsavel",
       flex: 1,
       headerClassName: "cor-background-headerName",
     },

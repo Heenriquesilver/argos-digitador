@@ -10,10 +10,16 @@ import {
 } from "@mui/material";
 import Menu from "@mui/material/Menu";
 
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+
 import Grid from "@mui/material/GridLegacy";
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridRowId, GridRowSelectionModel } from "@mui/x-data-grid";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ptBR } from "@mui/x-data-grid/locales";
 import AddIcon from "@mui/icons-material/Add";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -26,12 +32,17 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import api from "../../api/axios";
 
 type ProcessoRow = {
   id: number;
   processo: string;
   cliente: string;
-  origem: string;
+  reclamada: string;
+  reclamante: string;
+  tipoServico: string;
+  fase: string;
+  tribunal: string;
   status: string;
   prioridade: string;
   prazo: string;
@@ -40,9 +51,14 @@ type ProcessoRow = {
 export default function ProcessoPage() {
   const navigate = useNavigate();
 
+  dayjs.locale("pt-br");
+
   const [openFilter, setOpenFilter] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<ProcessoRow | null>(null);
+  const [rowsOriginal, setRowsOriginal] = useState<ProcessoRow[]>([]);
+
+  const [rows, setRows] = useState<ProcessoRow[]>([]);
 
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
     type: "include",
@@ -55,7 +71,7 @@ export default function ProcessoPage() {
     tipoServico: "-",
     status: "",
     periodoInicio: "",
-    periodoFim: "",
+    prazo: "",
     responsavel: "",
   });
 
@@ -73,54 +89,91 @@ export default function ProcessoPage() {
     setSelectedRow(row);
   };
 
-  const rows = [
-    {
-      id: 1,
-      processo: "#LC-2023-099",
-      cliente: "Ana Souza",
-      tipoServico: "-",
-      fase: "-",
-      origem: "Trabalhista",
-      status: "Em Análise",
-      prioridade: "ALTA",
-      prazo: "24/10/2023",
-    },
-    {
-      id: 2,
-      processo: "#LC-2023-085",
-      cliente: "Construtora Melo",
-      tipoServico: "-",
-      fase: "-",
-      origem: "Cível",
-      status: "Calculando",
-      prioridade: "Normal",
-      prazo: "28/10/2023",
-    },
-    {
-      id: 3,
-      processo: "#LC-2023-042",
-      cliente: "Roberto Faria",
-      tipoServico: "-",
-      fase: "-",
-      origem: "Previdenciário",
-      status: "Finalizado",
+  const buscarProcessos = async () => {
+    try {
+      const response = await api.get("/api/v1/processo-judicial", {
+        params: {
+          termo: "",
+          page: 0,
+          size: 10,
+        },
+      });
 
-      prioridade: "Baixa",
-      prazo: "30/10/2023",
-    },
-    {
-      id: 4,
-      processo: "#LC-2023-031",
-      cliente: "Júlia Lima",
-      tipoServico: "-",
-      fase: "-",
-      origem: "Trabalhista",
-      status: "Finalizado",
-      prioridade: "Normal",
-      prazo: "01/11/2023",
-    },
-  ];
+      const processos: ProcessoRow[] = (response.data?.elements || []).map(
+        (p: any) => ({
+          id: p.id,
+          processo: p.numeroProcesso,
+          cliente: p.cliente?.razaoSocial || "",
+          reclamada: p.reclamada || "",
+          reclamante: p.reclamante || "",
+          tipoServico: p.assuntoJuridico?.titulo || "",
+          fase: p.faseProcesso?.titulo || "",
+          tribunal: p.orgaoJulgador?.nomeFantasia || "",
+          status: "Em Análise",
+          prioridade: "Normal",
+          prazo: p.prazo,
+        }),
+      );
 
+      setRowsOriginal(processos); // guarda original
+      setRows(processos); // mostra na tabela
+    } catch (error: any) {
+      console.error("Erro ao buscar processos", error.response?.data || error);
+      setRows([]);
+    }
+  };
+
+  useEffect(() => {
+    const carregar = async () => {
+      await buscarProcessos();
+    };
+
+    carregar();
+  }, []);
+
+  const aplicarFiltros = () => {
+    let filtrados = [...rowsOriginal];
+
+    if (filtros.numero) {
+      filtrados = filtrados.filter((p) =>
+        p.processo.toLowerCase().includes(filtros.numero.toLowerCase()),
+      );
+    }
+
+    if (filtros.cliente) {
+      filtrados = filtrados.filter((p) =>
+        p.cliente.toLowerCase().includes(filtros.cliente.toLowerCase()),
+      );
+    }
+
+    if (filtros.status) {
+      filtrados = filtrados.filter((p) => p.status === filtros.status);
+    }
+
+    if (filtros.periodoInicio) {
+      filtrados = filtrados.filter(
+        (p) => p.prazo && p.prazo >= filtros.periodoInicio,
+      );
+    }
+
+    if (filtros.prazo) {
+      filtrados = filtrados.filter((p) => p.prazo && p.prazo <= filtros.prazo);
+    }
+
+    setRows(filtrados);
+  };
+
+  const limparFiltro = () => {
+    setFiltros({
+      numero: "",
+      cliente: "",
+      tipoServico: "-",
+      status: "",
+      periodoInicio: "",
+      prazo: "",
+      responsavel: "",
+    });
+  };
   const columns: GridColDef<ProcessoRow>[] = [
     {
       field: "processo",
@@ -134,6 +187,19 @@ export default function ProcessoPage() {
       flex: 1.3,
       headerClassName: "cor-background-headerName",
     },
+    {
+      field: "reclamante",
+      headerName: "Reclamante",
+      flex: 1.3,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "reclamada",
+      headerName: "Reclamada",
+      flex: 1.3,
+      headerClassName: "cor-background-headerName",
+    },
+
     {
       field: "tipoServico",
       headerName: "Tipo de Serviço",
@@ -203,6 +269,7 @@ export default function ProcessoPage() {
       filterable: false,
       align: "right",
       headerAlign: "right",
+
       renderCell: (params) => (
         <IconButton
           size="small"
@@ -235,24 +302,6 @@ export default function ProcessoPage() {
           <Typography color="text.secondary">
             Monitoramento e gestão em tempo real.
           </Typography>
-        </Grid>
-
-        <Grid
-          item
-          xs={12}
-          md={6}
-          display="flex"
-          justifyContent={{ xs: "flex-start", md: "flex-end" }}
-          mt={{ xs: 2, md: 0 }}
-        >
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            sx={{ bgcolor: "#5c6cff", py: 1.3 }}
-            onClick={() => navigate("/novo-processo")}
-          >
-            Novo Processo
-          </Button>
         </Grid>
       </Grid>
 
@@ -298,6 +347,14 @@ export default function ProcessoPage() {
 
       {/* BOTÃO FILTRO */}
       <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+          onClick={() => navigate("/novo-processo")}
+        >
+          Novo Processo
+        </Button>
         <Button
           variant="contained"
           //   startIcon={<FilterListIcon />}
@@ -361,7 +418,7 @@ export default function ProcessoPage() {
                   setFiltros({ ...filtros, status: e.target.value })
                 }
               >
-                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="Todos">Todos</MenuItem>
                 <MenuItem value="Em Análise">Em Análise</MenuItem>
                 <MenuItem value="Calculando">Calculando</MenuItem>
                 <MenuItem value="Finalizado">Finalizado</MenuItem>
@@ -369,29 +426,53 @@ export default function ProcessoPage() {
             </Grid>
 
             <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                type="date"
-                label="Período Início"
-                InputLabelProps={{ shrink: true }}
-                value={filtros.periodoInicio}
-                onChange={(e) =>
-                  setFiltros({ ...filtros, periodoInicio: e.target.value })
-                }
-              />
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="pt-br"
+              >
+                <DatePicker
+                  label="Período Início"
+                  value={
+                    filtros.periodoInicio ? dayjs(filtros.periodoInicio) : null
+                  }
+                  onChange={(newValue) =>
+                    setFiltros({
+                      ...filtros,
+                      periodoInicio: newValue
+                        ? newValue.format("YYYY-MM-DD")
+                        : "",
+                    })
+                  }
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                    },
+                  }}
+                />
+              </LocalizationProvider>
             </Grid>
 
             <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                type="date"
-                label="Período Fim"
-                InputLabelProps={{ shrink: true }}
-                value={filtros.periodoFim}
-                onChange={(e) =>
-                  setFiltros({ ...filtros, periodoFim: e.target.value })
-                }
-              />
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="pt-br"
+              >
+                <DatePicker
+                  label="Período Fim"
+                  value={filtros.prazo ? dayjs(filtros.prazo) : null}
+                  onChange={(newValue) =>
+                    setFiltros({
+                      ...filtros,
+                      prazo: newValue ? newValue.format("YYYY-MM-DD") : "",
+                    })
+                  }
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                    },
+                  }}
+                />
+              </LocalizationProvider>
             </Grid>
 
             <Grid item xs={12} md={4}>
@@ -405,11 +486,18 @@ export default function ProcessoPage() {
               />
             </Grid>
 
-            <Grid item xs={12} display="flex" justifyContent="flex-end">
+            <Grid item xs={12} display="flex" justifyContent="flex-end" gap={1}>
               <Button
                 variant="contained"
                 sx={{ bgcolor: "#5c6cff" }}
-                onClick={() => console.log("Aplicar filtros:", filtros)}
+                onClick={limparFiltro}
+              >
+                Limpar
+              </Button>
+              <Button
+                variant="contained"
+                sx={{ bgcolor: "#5c6cff" }}
+                onClick={aplicarFiltros}
               >
                 Aplicar
               </Button>
@@ -447,6 +535,9 @@ export default function ProcessoPage() {
               fontWeight: "bold",
             },
             "& .cor-background-headerName": {
+              backgroundColor: "#E0E7FF",
+            },
+            "& .MuiDataGrid-columnHeaderCheckbox": {
               backgroundColor: "#E0E7FF",
             },
           }}

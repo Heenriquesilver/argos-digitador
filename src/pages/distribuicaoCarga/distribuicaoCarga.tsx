@@ -186,7 +186,7 @@ export default function DistribuicaoCarga() {
         <Grid item xs={12} md={5}>
           <Paper sx={{ p: 3, borderRadius: 3, height: "100%" }}>
             <Typography fontWeight={600} mb={2} color="text.primary">
-              Processos Pendentes
+              Equipe
             </Typography>
 
             {/* SEARCH */}
