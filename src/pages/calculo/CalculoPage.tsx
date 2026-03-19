@@ -13,7 +13,7 @@ import Menu from "@mui/material/Menu";
 import Grid from "@mui/material/GridLegacy";
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridRowId, GridRowSelectionModel } from "@mui/x-data-grid";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ptBR } from "@mui/x-data-grid/locales";
 import AddIcon from "@mui/icons-material/Add";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -21,6 +21,8 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import type { GridColDef } from "@mui/x-data-grid";
 import MetricCard from "../../components/MetricCard";
 import { useNavigate } from "react-router-dom";
+import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
+import api from "../../api/axios";
 
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
@@ -43,6 +45,11 @@ export default function CalculoPage() {
   const [openFilter, setOpenFilter] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<ProcessoRow | null>(null);
+  const [rows, setRows] = useState<ProcessoRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState("");
+
+  const { data: idEntidadeWork } = useGetEntidadeWork();
 
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
     type: "include",
@@ -73,57 +80,15 @@ export default function CalculoPage() {
     setSelectedRow(row);
   };
 
-  const rows = [
-    {
-      id: 1,
-      processo: "#LC-2023-099",
-      cliente: "Ana Souza",
-      tipoServico: "-",
-      fase: "-",
-      origem: "Trabalhista",
-      status: "Em Análise",
-      prioridade: "ALTA",
-      prazo: "24/10/2023",
-    },
-    {
-      id: 2,
-      processo: "#LC-2023-085",
-      cliente: "Construtora Melo",
-      tipoServico: "-",
-      fase: "-",
-      origem: "Cível",
-      status: "Calculando",
-      prioridade: "Normal",
-      prazo: "28/10/2023",
-    },
-    {
-      id: 3,
-      processo: "#LC-2023-042",
-      cliente: "Roberto Faria",
-      tipoServico: "-",
-      fase: "-",
-      origem: "Previdenciário",
-      status: "Finalizado",
-
-      prioridade: "Baixa",
-      prazo: "30/10/2023",
-    },
-    {
-      id: 4,
-      processo: "#LC-2023-031",
-      cliente: "Júlia Lima",
-      tipoServico: "-",
-      fase: "-",
-      origem: "Trabalhista",
-      status: "Finalizado",
-      prioridade: "Normal",
-      prazo: "01/11/2023",
-    },
-  ];
-
   const columns: GridColDef<ProcessoRow>[] = [
     {
       field: "processo",
+      headerName: "Número Processo",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "id",
       headerName: "ID Processo",
       flex: 1,
       headerClassName: "cor-background-headerName",
@@ -214,6 +179,70 @@ export default function CalculoPage() {
       headerClassName: "cor-background-headerName",
     },
   ];
+
+  async function buscarCalculos() {
+    try {
+      if (!idEntidadeWork) return;
+
+      setLoading(true);
+      setErro("");
+
+      const entidade = idEntidadeWork;
+
+      const payload = {
+        numeroProcesso: filtros.numero?.trim() || "",
+        cliente: filtros.cliente?.trim() ? Number(filtros.cliente) : 0,
+        status: filtros.status ? Number(filtros.status) : 0,
+        responsavel: filtros.responsavel?.trim()
+          ? Number(filtros.responsavel)
+          : 0,
+        dataInicio: filtros.periodoInicio || null,
+        dataTermino: filtros.periodoFim || null,
+      };
+
+      console.log("PAYLOAD FINAL", payload);
+      console.log("ENTIDADE", entidade);
+
+      const res = await api.post(
+        `/api/v1/calculo-judicial/filtro/${entidade}`,
+        payload,
+        {
+          params: {
+            page: 0,
+            size: 10,
+          },
+        },
+      );
+
+      const dadosFormatados = res.data.elements.map((item: any) => ({
+        id: item.id,
+        processo: item.processoJudicial.numeroProcesso,
+        cliente: item.processoJudicial.cliente?.entidade?.nomeSocial || "",
+        tipoServico: item.processoJudicial.assuntoJuridico?.titulo || "",
+        fase: item.processoJudicial.faseProcesso?.titulo || "",
+        responsavel: item.responsavel?.nome || "",
+        status: item.status?.titulo || "",
+        prioridade: item.prioridade,
+        prazo: item.prazo,
+      }));
+
+      setRows(dadosFormatados);
+
+      setSelectionModel({
+        type: "include",
+        ids: new Set(),
+      });
+    } catch (error) {
+      console.error("Erro ao buscar cálculos", error);
+      setErro("Erro ao buscar dados");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    buscarCalculos();
+  }, []);
 
   return (
     <Box
@@ -361,10 +390,9 @@ export default function CalculoPage() {
                   setFiltros({ ...filtros, status: e.target.value })
                 }
               >
-                <MenuItem value="">Todos</MenuItem>
-                <MenuItem value="Em Análise">Em Análise</MenuItem>
-                <MenuItem value="Calculando">Calculando</MenuItem>
-                <MenuItem value="Finalizado">Finalizado</MenuItem>
+                <MenuItem value={1}>Em Análise</MenuItem>
+                <MenuItem value={2}>Calculando</MenuItem>
+                <MenuItem value={3}>Finalizado</MenuItem>
               </TextField>
             </Grid>
 
@@ -372,7 +400,7 @@ export default function CalculoPage() {
               <TextField
                 fullWidth
                 type="date"
-                label="Período Início"
+                label="Inicio"
                 InputLabelProps={{ shrink: true }}
                 value={filtros.periodoInicio}
                 onChange={(e) =>
@@ -385,7 +413,7 @@ export default function CalculoPage() {
               <TextField
                 fullWidth
                 type="date"
-                label="Período Fim"
+                label="Termino"
                 InputLabelProps={{ shrink: true }}
                 value={filtros.periodoFim}
                 onChange={(e) =>
@@ -409,9 +437,10 @@ export default function CalculoPage() {
               <Button
                 variant="contained"
                 sx={{ bgcolor: "#5c6cff" }}
-                onClick={() => console.log("Aplicar filtros:", filtros)}
+                onClick={buscarCalculos}
+                disabled={loading}
               >
-                Aplicar
+                {loading ? "Buscando..." : "Aplicar"}
               </Button>
             </Grid>
           </Grid>
@@ -429,17 +458,23 @@ export default function CalculoPage() {
         <DataGrid
           rows={rows}
           columns={columns}
+          loading={loading}
           checkboxSelection
           disableRowSelectionOnClick
           rowSelectionModel={selectionModel}
           onRowSelectionModelChange={(newSelection) =>
             setSelectionModel(newSelection)
           }
-          localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
-          pageSizeOptions={[5]}
+          localeText={{
+            ...ptBR.components.MuiDataGrid.defaultProps.localeText,
+            noRowsLabel: loading
+              ? "Carregando..."
+              : "Nenhum resultado encontrado",
+          }}
+          pageSizeOptions={[20]}
           initialState={{
             pagination: {
-              paginationModel: { pageSize: 5, page: 0 },
+              paginationModel: { pageSize: 20, page: 0 },
             },
           }}
           sx={{

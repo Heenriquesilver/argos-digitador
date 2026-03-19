@@ -40,13 +40,16 @@ type ProcessoRow = {
   cliente: string;
   reclamada: string;
   reclamante: string;
+
   tipoServico: string;
   fase: string;
   tribunal: string;
   status: string;
-  prioridade: string;
+  prioridade: Tprioridade;
   prazo: string;
 };
+
+type Tprioridade = "NORMAL" | "ALTA" | "URGENTE";
 
 export default function ProcessoPage() {
   const navigate = useNavigate();
@@ -57,6 +60,12 @@ export default function ProcessoPage() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<ProcessoRow | null>(null);
   const [rowsOriginal, setRowsOriginal] = useState<ProcessoRow[]>([]);
+
+  const prioridadeLabelMap: Record<number, Tprioridade> = {
+    1: "NORMAL",
+    2: "ALTA",
+    3: "URGENTE",
+  };
 
   const [rows, setRows] = useState<ProcessoRow[]>([]);
 
@@ -93,9 +102,9 @@ export default function ProcessoPage() {
     try {
       const response = await api.get("/api/v1/processo-judicial", {
         params: {
-          termo: "",
+          termo: "", // usa o número que você criou
           page: 0,
-          size: 10,
+          size: 100,
         },
       });
 
@@ -110,7 +119,7 @@ export default function ProcessoPage() {
           fase: p.faseProcesso?.titulo || "",
           tribunal: p.orgaoJulgador?.nomeFantasia || "",
           status: "Em Análise",
-          prioridade: "Normal",
+          prioridade: prioridadeLabelMap[p.prioridade],
           prazo: p.prazo,
         }),
       );
@@ -360,7 +369,17 @@ export default function ProcessoPage() {
           //   startIcon={<FilterListIcon />}
           disabled={selectionModel.ids.size === 0}
           sx={{ bgcolor: "#5c6cff", py: 1.3 }}
-          onClick={() => navigate("/distribuicao-carga", {})}
+          onClick={() => {
+            const idsSelecionados = Array.from(selectionModel.ids);
+
+            const selecionados = rows.filter((row) =>
+              idsSelecionados.includes(row.id),
+            );
+
+            navigate("/distribuicao-carga", {
+              state: { processos: selecionados },
+            });
+          }}
         >
           Distribuir
         </Button>

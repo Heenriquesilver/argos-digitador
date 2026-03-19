@@ -25,6 +25,7 @@ import "dayjs/locale/pt-br";
 import Radio from "@mui/material/Radio";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import { useNavigate } from "react-router-dom";
+import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
 import api from "../../api/axios";
 
 type Tprioridade = "NORMAL" | "ALTA" | "URGENTE";
@@ -32,7 +33,15 @@ type Tprioridade = "NORMAL" | "ALTA" | "URGENTE";
 export default function NovoProcessoPage() {
   const navigate = useNavigate();
 
+  const { data: idEntidadeWork } = useGetEntidadeWork();
+
   dayjs.locale("pt-br");
+
+  const prioridadeMap: Record<Tprioridade, number> = {
+    NORMAL: 1,
+    ALTA: 2,
+    URGENTE: 3,
+  };
 
   const [prioridade, setPrioridade] = useState<Tprioridade>("NORMAL");
 
@@ -147,7 +156,7 @@ export default function NovoProcessoPage() {
 
   async function salvarProcesso() {
     try {
-      const entidadePai = localStorage.getItem("idEntidadeUsuarioLogado");
+      const entidadePai = idEntidadeWork;
 
       if (!clienteSelecionado) {
         alert("Selecione um cliente");
@@ -163,6 +172,7 @@ export default function NovoProcessoPage() {
         numeroProcesso,
         entidade: Number(entidadePai),
         reclamante,
+        prioridade: prioridadeMap[prioridade],
         reclamada,
         cliente: clienteSelecionado.id,
         orgaoJulgador: tribunalSelecionado.id,

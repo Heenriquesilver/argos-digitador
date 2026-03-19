@@ -8,42 +8,32 @@ import {
   Paper,
   Avatar,
   LinearProgress,
+  MenuItem,
   TextField,
 } from "@mui/material";
 import GraficoDistribuicao from "../../components/grafico-distribuicao-carga/graficoDistribuicao";
 import MetricCard from "../../components/MetricCard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
+import { useLocation } from "react-router-dom";
+
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import Grid from "@mui/material/GridLegacy";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import SearchIcon from "@mui/icons-material/Search";
-import { useState } from "react";
+import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
+import api from "../../api/axios";
+
+import { useState, useEffect } from "react";
 
 export default function DistribuicaoCarga() {
-  const [search, setSearch] = useState("");
+  const [pessoas, setPessoas] = useState<any[]>([]);
+  const [pessoaSelecionada, setPessoaSelecionada] = useState("");
+  const { data: idEntidadeWork } = useGetEntidadeWork();
 
-  const processos = [
-    {
-      id: 1,
-      area: "TRABALHISTA",
-      numero: "0001234-56.2023.8.01.0000",
-      descricao: "Liquidação de Sentença - Horas Extras e Reflexos",
-      complexidade: "Alta",
-      prazo: "Expira em 2h",
-      urgente: true,
-    },
-    {
-      id: 2,
-      area: "CÍVEL",
-      numero: "0087421-12.2023.8.19.0001",
-      descricao: "Cálculo de Atualização Monetária - Indenização",
-      complexidade: "Baixa",
-      prazo: "3 dias restantes",
-      urgente: false,
-    },
-  ];
+  const location = useLocation();
+
+  const [processos, setProcessos] = useState(location.state?.processos || []);
 
   const equipe = [
     {
@@ -100,6 +90,56 @@ export default function DistribuicaoCarga() {
     label: membro.id.toString(),
     value: membro.carga,
   }));
+
+  useEffect(() => {
+    const fetchPessoas = async () => {
+      try {
+        const entidadePai = localStorage.getItem("idEntidadeUsuarioLogado");
+
+        const response = await api.get("/api/v1/pessoa_fisica", {
+          params: {
+            entidade_pai: Number(entidadePai),
+            page: 0,
+            size: 10,
+          },
+        });
+
+        setPessoas(response.data?.elements || []);
+      } catch (error) {
+        console.error("Erro ao buscar pessoas", error);
+      }
+    };
+
+    fetchPessoas();
+  }, []);
+
+  const atribuirProcesso = async (proc: any) => {
+    if (!pessoaSelecionada) {
+      alert("Selecione um responsável antes de atribuir.");
+      return;
+    }
+
+    try {
+      const payload = {
+        processoJudicial: proc.id,
+        status: 2,
+        responsavel: Number(pessoaSelecionada),
+        prioridade: 1,
+        alocacao: new Date().toISOString(),
+        inicio: null,
+        termino: null,
+        prazo: proc.prazo,
+        observacao: "",
+      };
+
+      await api.post("/api/v1/calculo-judicial", payload);
+
+      setProcessos((prev) => prev.filter((p) => p.id !== proc.id));
+    } catch (error) {
+      console.error("Erro ao atribuir processo", error);
+      alert("Erro ao atribuir processo.");
+    }
+  };
 
   return (
     <Box
@@ -192,15 +232,19 @@ export default function DistribuicaoCarga() {
             {/* SEARCH */}
             <TextField
               fullWidth
+              select
               size="small"
-              placeholder="Filtrar processos..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1 }} />,
-              }}
+              label="Selecionar responsável"
+              value={pessoaSelecionada}
+              onChange={(e) => setPessoaSelecionada(e.target.value)}
               sx={{ mb: 3 }}
-            />
+            >
+              {pessoas.map((pessoa) => (
+                <MenuItem key={pessoa.id} value={pessoa.id}>
+                  {pessoa.nome}
+                </MenuItem>
+              ))}
+            </TextField>
 
             <Stack spacing={2}>
               {processos.map((proc) => (
@@ -212,19 +256,17 @@ export default function DistribuicaoCarga() {
                     border: "1px solid #eee",
                   }}
                 >
-                  <Chip size="small" label={proc.area} sx={{ mb: 1 }} />
+                  <Chip size="small" label={proc.tipoServico} sx={{ mb: 1 }} />
 
                   <Typography fontWeight={600} fontSize={14}>
-                    {proc.numero}
+                    {proc.processo}
                   </Typography>
 
                   <Typography variant="body2" color="text.secondary" mb={1}>
-                    {proc.descricao}
+                    {proc.cliente}
                   </Typography>
 
-                  <Typography variant="caption">
-                    Complexidade: {proc.complexidade}
-                  </Typography>
+                  <Typography variant="caption">Fase: {proc.fase}</Typography>
 
                   <Stack
                     direction="row"
@@ -232,17 +274,15 @@ export default function DistribuicaoCarga() {
                     mt={2}
                     alignItems="center"
                   >
-                    <Typography
-                      variant="caption"
-                      color={proc.urgente ? "error" : "text.secondary"}
-                    >
-                      {proc.prazo}
+                    <Typography variant="caption" color="text.secondary">
+                      Prazo: {proc.prazo || "N/A"}
                     </Typography>
 
                     <Button
                       size="small"
                       variant="contained"
                       sx={{ bgcolor: "#5c6cff" }}
+                      onClick={() => atribuirProcesso(proc)}
                     >
                       Atribuir
                     </Button>
