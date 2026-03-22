@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { entidadeService } from "../entidadeService";
-import { type ConexaoSocialOutput } from "../types";
 
 export default function useGetEntidadeWork() {
   const [data, setData] = useState<number | null>(null);

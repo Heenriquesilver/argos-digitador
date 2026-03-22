@@ -94,16 +94,16 @@ export default function DistribuicaoCarga() {
   useEffect(() => {
     const fetchPessoas = async () => {
       try {
-        const entidadePai = localStorage.getItem("idEntidadeUsuarioLogado");
+        const entidadePai = idEntidadeWork;
 
         const response = await api.get("/api/v1/pessoa_fisica", {
           params: {
-            entidade_pai: Number(entidadePai),
+            entidade_pai: entidadePai,
             page: 0,
             size: 10,
           },
         });
-
+        console.log("Entidade Pai", entidadePai);
         setPessoas(response.data?.elements || []);
       } catch (error) {
         console.error("Erro ao buscar pessoas", error);
@@ -111,7 +111,7 @@ export default function DistribuicaoCarga() {
     };
 
     fetchPessoas();
-  }, []);
+  }, [idEntidadeWork]);
 
   const atribuirProcesso = async (proc: any) => {
     if (!pessoaSelecionada) {

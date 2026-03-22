@@ -6,6 +6,9 @@ import {
   IconButton,
   Collapse,
   TextField,
+  Paper,
+  Stack,
+  Modal,
   MenuItem,
 } from "@mui/material";
 import Menu from "@mui/material/Menu";
@@ -29,7 +32,10 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 
+type Tprioridade = "NORMAL" | "ALTA" | "URGENTE";
+
 type ProcessoRow = {
+  tipoServico: string;
   id: number;
   processo: string;
   cliente: string;
@@ -49,6 +55,19 @@ export default function CalculoPage() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
 
+  const prioridadeLabelMap: Record<number, Tprioridade> = {
+    1: "NORMAL",
+    2: "ALTA",
+    3: "URGENTE",
+  };
+
+  const [openModalDistribuir, setOpenModalDistribuir] = useState(false);
+  const [processosSelecionados, setProcessosSelecionados] = useState<
+    ProcessoRow[]
+  >([]);
+  const [pessoas, setPessoas] = useState<any[]>([]);
+  const [pessoaSelecionada, setPessoaSelecionada] = useState("");
+
   const { data: idEntidadeWork } = useGetEntidadeWork();
 
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
@@ -56,13 +75,21 @@ export default function CalculoPage() {
     ids: new Set<GridRowId>(),
   });
 
+  function formatDate(date: Date) {
+    return date.toISOString().split("T")[0];
+  }
+
+  const hoje = new Date();
+  const maisDoisDias = new Date();
+  maisDoisDias.setDate(hoje.getDate() + 2);
+
   const [filtros, setFiltros] = useState({
     numero: "",
     cliente: "",
     tipoServico: "-",
     status: "",
-    periodoInicio: "",
-    periodoFim: "",
+    periodoInicio: formatDate(hoje),
+    periodoFim: formatDate(maisDoisDias),
     responsavel: "",
   });
 
@@ -222,7 +249,7 @@ export default function CalculoPage() {
         fase: item.processoJudicial.faseProcesso?.titulo || "",
         responsavel: item.responsavel?.nome || "",
         status: item.status?.titulo || "",
-        prioridade: item.prioridade,
+        prioridade: prioridadeLabelMap[item.prioridade],
         prazo: item.prazo,
       }));
 
@@ -240,9 +267,84 @@ export default function CalculoPage() {
     }
   }
 
+  // useEffect(() => {
+  //   buscarCalculos();
+  // }, []);
+
   useEffect(() => {
-    buscarCalculos();
-  }, []);
+    const fetchPessoas = async () => {
+      try {
+        const entidadePai = localStorage.getItem("idEntidadeUsuarioLogado");
+
+        const response = await api.get("/api/v1/pessoa_fisica", {
+          params: {
+            entidade_pai: Number(entidadePai),
+            page: 0,
+            size: 10,
+          },
+        });
+
+        setPessoas(response.data?.elements || []);
+      } catch (error) {
+        console.error("Erro ao buscar pessoas", error);
+      }
+    };
+
+    fetchPessoas();
+  }, [openModalDistribuir, pessoaSelecionada]);
+
+  async function atribuirProcesso(proc: ProcessoRow) {
+    try {
+      if (!pessoaSelecionada) {
+        alert("Selecione um responsável");
+        return;
+      }
+
+      const payload = {
+        processoJudicial: proc.id,
+        status: 2,
+        responsavel: Number(pessoaSelecionada),
+        prioridade: "1",
+        alocacao: new Date().toISOString(),
+        inicio: new Date().toISOString(),
+        termino: new Date().toISOString(),
+        prazo: proc.prazo,
+        observacao: "",
+      };
+
+      await api.put(`/api/v1/calculo-judicial/${proc.id}`, payload);
+
+      setProcessosSelecionados((prev) => prev.filter((p) => p.id !== proc.id));
+
+      alert("Processo atribuído com sucesso");
+
+      buscarCalculos(); // atualiza tabela
+    } catch (error) {
+      console.error("Erro ao atribuir", error);
+    }
+  }
+
+  async function buscarPessoas() {
+    try {
+      const res = await api.get("/api/v1/pessoa_fisica", {
+        params: {
+          entidade_pai: idEntidadeWork,
+          page: 0,
+          size: 50,
+        },
+      });
+
+      setPessoas(res.data.elements);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    if (openModalDistribuir) {
+      buscarPessoas();
+    }
+  }, [openModalDistribuir]);
 
   return (
     <Box
@@ -332,9 +434,18 @@ export default function CalculoPage() {
           //   startIcon={<FilterListIcon />}
           disabled={selectionModel.ids.size === 0}
           sx={{ bgcolor: "#5c6cff", py: 1.3 }}
-          onClick={() => navigate("/distribuicao-carga", {})}
+          onClick={() => {
+            const idsSelecionados = Array.from(selectionModel.ids);
+
+            const processos = rows.filter((row) =>
+              idsSelecionados.includes(row.id),
+            );
+
+            setProcessosSelecionados(processos);
+            setOpenModalDistribuir(true);
+          }}
         >
-          Distribuir
+          Realocar
         </Button>
         <Button
           variant="contained"
@@ -484,6 +595,9 @@ export default function CalculoPage() {
             "& .cor-background-headerName": {
               backgroundColor: "#E0E7FF",
             },
+            "& .MuiDataGrid-columnHeaderCheckbox": {
+              backgroundColor: "#E0E7FF",
+            },
           }}
         />
         <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
@@ -503,6 +617,87 @@ export default function CalculoPage() {
             Distribuir
           </MenuItem>
         </Menu>
+        <Modal
+          open={openModalDistribuir}
+          onClose={() => setOpenModalDistribuir(false)}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 500,
+            }}
+          >
+            <Paper sx={{ p: 3, borderRadius: 3 }}>
+              <Typography fontWeight={600} mb={2}>
+                Distribuir Processos
+              </Typography>
+
+              <TextField
+                fullWidth
+                select
+                size="small"
+                label="Selecionar responsável"
+                value={pessoaSelecionada}
+                onChange={(e) => setPessoaSelecionada(e.target.value)}
+                sx={{ mb: 3 }}
+              >
+                {pessoas.map((pessoa) => (
+                  <MenuItem key={pessoa.id} value={pessoa.id}>
+                    {pessoa.nome}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <Stack spacing={2} maxHeight={400} overflow="auto">
+                {processosSelecionados.map((proc) => (
+                  <Paper
+                    key={proc.id}
+                    sx={{ p: 2, borderRadius: 2, border: "1px solid #eee" }}
+                  >
+                    <Chip
+                      size="small"
+                      label={proc.tipoServico}
+                      sx={{ mb: 1 }}
+                    />
+
+                    <Typography fontWeight={600} fontSize={14}>
+                      {proc.processo}
+                    </Typography>
+
+                    <Typography variant="body2" color="text.secondary" mb={1}>
+                      {proc.cliente}
+                    </Typography>
+
+                    <Typography variant="caption">Fase: {proc.fase}</Typography>
+
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      mt={2}
+                      alignItems="center"
+                    >
+                      <Typography variant="caption">
+                        Prazo: {proc.prazo || "N/A"}
+                      </Typography>
+
+                      <Button
+                        size="small"
+                        variant="contained"
+                        sx={{ bgcolor: "#5c6cff" }}
+                        onClick={() => atribuirProcesso(proc)}
+                      >
+                        Atribuir
+                      </Button>
+                    </Stack>
+                  </Paper>
+                ))}
+              </Stack>
+            </Paper>
+          </Box>
+        </Modal>
       </Box>
     </Box>
   );

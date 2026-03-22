@@ -13,6 +13,7 @@ import EmpresasPage from "./pages/empresas/empresasPage";
 import NovaEmpresaPage from "./pages/empresas/nova-empresa/novaEmpresaPage";
 import UsuariosPage from "./pages/usuarios/usuariosPage";
 import CalculoPage from "./pages/calculo/CalculoPage";
+import EquipePage from "./pages/equipe/equipePage";
 
 // Layout e Rotas Privadas
 import PrivateRoute from "./routes/privateRoute";
@@ -45,7 +46,7 @@ export default function App() {
             <Route path="/nova-empresa" element={<NovaEmpresaPage />} />
             <Route path="/usuarios" element={<UsuariosPage />} />
             <Route path="/calculos" element={<CalculoPage />} />
-
+            <Route path="/equipe" element={<EquipePage />} />
             {/* Futuras páginas podem ser adicionadas aqui */}
             {/* <Route path="/agenda" element={<AgendaPage />} /> */}
           </Route>

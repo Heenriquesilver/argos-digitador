@@ -74,13 +74,25 @@ export default function ProcessoPage() {
     ids: new Set<GridRowId>(),
   });
 
+  const hoje = new Date();
+  const maisDoisDias = new Date();
+  maisDoisDias.setDate(hoje.getDate() + 2);
+
+  function formatDate(date: Date) {
+    return date.toISOString().split("T")[0];
+
+    const hoje = new Date();
+    const maisDoisDias = new Date();
+    maisDoisDias.setDate(hoje.getDate() + 2);
+  }
+
   const [filtros, setFiltros] = useState({
     numero: "",
     cliente: "",
     tipoServico: "-",
     status: "",
-    periodoInicio: "",
-    prazo: "",
+    periodoInicio: formatDate(hoje),
+    prazo: formatDate(maisDoisDias),
     responsavel: "",
   });
 

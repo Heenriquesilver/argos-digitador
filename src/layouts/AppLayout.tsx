@@ -29,14 +29,14 @@ const drawerWidth = 240;
 const menuItems = [
   { label: "Home", icon: <HomeIcon />, path: "/home" },
   { label: "Processos", icon: <EventIcon />, path: "/processo" },
-  { label: "Calculos", icon: <PeopleIcon />, path: "calculos" },
+  { label: "Calculos", icon: <PeopleIcon />, path: "/calculos" },
   { label: "Documentos", icon: <PeopleIcon />, path: "/documentos" },
   { label: "Comunicacao", icon: <PeopleIcon />, path: "/comunicacao" },
 
   { label: "Qualidade", icon: <PeopleIcon />, path: "/profissionais" },
   { label: "Empreitadas", icon: <PeopleIcon />, path: "/profissionais" },
   { label: "Medicoes", icon: <PeopleIcon />, path: "/profissionais" },
-  { label: "Equipe", icon: <PeopleIcon />, path: "/profissionais" },
+  { label: "Equipe", icon: <PeopleIcon />, path: "/equipe" },
   { label: "Clientes", icon: <PeopleIcon />, path: "/profissionais" },
   { label: "Contratos", icon: <PeopleIcon />, path: "/profissionais" },
   { label: "Cartilhas", icon: <PeopleIcon />, path: "/profissionais" },
