@@ -14,12 +14,16 @@ import Grid from "@mui/material/GridLegacy";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { ptBR } from "@mui/x-data-grid/locales";
 import { useState } from "react";
+import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
+import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
 interface TUsuario {
   id: number;
   nome: string;
-  email: string;
+  telefone: string;
+  entidade: string;
+  cpf: string;
 }
 
 interface PessoaFisicaResponse {
@@ -29,22 +33,29 @@ interface PessoaFisicaResponse {
   elements: {
     id: number;
     nome: string;
+    cpf: string;
+    telefone?: string;
     entidade?: {
+      id?: number; // 👈 adicionar isso
       nomeSocial?: string;
     };
   }[];
 }
 
-export default function UsuariosPage() {
+export default function ColaboradoresPage() {
+  const navigate = useNavigate();
+
   const [busca, setBusca] = useState("");
   const [rows, setRows] = useState<TUsuario[]>([]);
   const [loading, setLoading] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<TUsuario | null>(null);
 
-  const entidadePai = localStorage.getItem("idEntidadeUsuarioLogado");
+  const { data: idEntidadeWork } = useGetEntidadeWork();
 
-  console.log("EntidadePai", entidadePai);
+  const entidadePai = idEntidadeWork;
+
+  // console.log("EntidadePai", entidadePai);
 
   const handleOpenMenu = (
     event: React.MouseEvent<HTMLElement>,
@@ -80,9 +91,21 @@ export default function UsuariosPage() {
       headerClassName: "cor-background-headerName",
     },
     {
-      field: "email",
-      headerName: "Email",
+      field: "cpf",
+      headerName: "CPF",
       flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "telefone",
+      headerName: "Telefone",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "entidade",
+      headerName: "Entidade",
+      flex: 0.5,
       headerClassName: "cor-background-headerName",
     },
     {
@@ -109,9 +132,10 @@ export default function UsuariosPage() {
       setLoading(true);
 
       const response = await api.get<PessoaFisicaResponse>(
-        "/api/v1/pessoa_fisica",
+        "/api/v1/pessoa_fisica/termo",
         {
           params: {
+            termo: "",
             entidade_pai: entidadePai,
             page: 0,
             size: 10,
@@ -122,7 +146,9 @@ export default function UsuariosPage() {
       const usuarios = (response.data?.elements || []).map((item) => ({
         id: item.id,
         nome: item.nome,
-        email: item.entidade?.nomeSocial || "-",
+        cpf: item.cpf || "-",
+        telefone: item.telefone || "-",
+        entidade: item.entidade?.id ?? "-", // 👈 aqui
       }));
 
       setRows(usuarios);
@@ -145,19 +171,17 @@ export default function UsuariosPage() {
         boxSizing: "border-box",
       }}
     >
-      {/* HEADER */}
       <Grid container alignItems="center" mb={4}>
         <Grid item xs={12} md={6}>
           <Typography variant="h5" fontWeight={600} color="text.primary">
-            Usuários
+            Colaboradores
           </Typography>
           <Typography color="text.secondary">
-            Localize usuários cadastrados.
+            Localize colaboradores cadastrados.
           </Typography>
         </Grid>
       </Grid>
 
-      {/* CAMPO DE BUSCA */}
       <Box
         mb={2}
         sx={{
@@ -166,7 +190,6 @@ export default function UsuariosPage() {
           alignItems: "center",
         }}
       >
-        {/* LADO ESQUERDO (campo + buscar) */}
         <Box sx={{ display: "flex", gap: "5px" }}>
           <TextField
             placeholder="Buscar usuários..."
@@ -208,9 +231,9 @@ export default function UsuariosPage() {
             px: 5,
             height: "55px",
           }}
-          onClick={() => console.log("Adicionar usuário")}
+          onClick={() => navigate("/novo-colaborador")}
         >
-          Adicionar Usuário
+          Adicionar Colaborador
         </Button>
       </Box>
 
@@ -239,6 +262,18 @@ export default function UsuariosPage() {
         />
 
         <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
+          <MenuItem
+            onClick={() => {
+              if (selectedRow) {
+                navigate(`/novo-colaborador/${selectedRow.id}`);
+              }
+              handleCloseMenu();
+            }}
+          >
+            Editar
+          </MenuItem>
+          <MenuItem onClick={handleVincularEquipe}>Usuario</MenuItem>
+
           <MenuItem onClick={handleVincularEquipe}>Vincular Equipe</MenuItem>
         </Menu>
       </Box>

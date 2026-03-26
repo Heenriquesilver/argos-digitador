@@ -11,9 +11,10 @@ import DocumentosPage from "./pages/documentos/documentos";
 import DistribuicaoCarga from "./pages/distribuicaoCarga/distribuicaoCarga";
 import EmpresasPage from "./pages/empresas/empresasPage";
 import NovaEmpresaPage from "./pages/empresas/nova-empresa/novaEmpresaPage";
-import UsuariosPage from "./pages/usuarios/usuariosPage";
+import ColaboradoresPage from "./pages/colaboradores/ColaboradoresPage";
 import CalculoPage from "./pages/calculo/CalculoPage";
 import EquipePage from "./pages/equipe/equipePage";
+import NovoColaboradorPage from "./pages/novo-colaborador/novoColaborador";
 
 // Layout e Rotas Privadas
 import PrivateRoute from "./routes/privateRoute";
@@ -44,9 +45,14 @@ export default function App() {
             <Route path="/empresas" element={<EmpresasPage />} />
             <Route path="/empresas/:id/editar" element={<NovaEmpresaPage />} />
             <Route path="/nova-empresa" element={<NovaEmpresaPage />} />
-            <Route path="/usuarios" element={<UsuariosPage />} />
+            <Route path="/colaboradores" element={<ColaboradoresPage />} />
             <Route path="/calculos" element={<CalculoPage />} />
             <Route path="/equipe" element={<EquipePage />} />
+            <Route path="/novo-colaborador" element={<NovoColaboradorPage />} />
+            <Route
+              path="/novo-colaborador/:id"
+              element={<NovoColaboradorPage />}
+            />
             {/* Futuras páginas podem ser adicionadas aqui */}
             {/* <Route path="/agenda" element={<AgendaPage />} /> */}
           </Route>

@@ -26,6 +26,19 @@ import api from "../../api/axios";
 
 import { useState, useEffect } from "react";
 
+type Tprocesso = {
+  id: number;
+  processoJudicial: string;
+  status: number;
+  responsavel: number;
+  prioridade: number;
+  alocacao: string;
+  inicio: number;
+  termino: number;
+  prazo: string;
+  observacao: number;
+};
+
 export default function DistribuicaoCarga() {
   const [pessoas, setPessoas] = useState<any[]>([]);
   const [pessoaSelecionada, setPessoaSelecionada] = useState("");
@@ -33,7 +46,9 @@ export default function DistribuicaoCarga() {
 
   const location = useLocation();
 
-  const [processos, setProcessos] = useState(location.state?.processos || []);
+  const [processos, setProcessos] = useState<Tprocesso[]>(
+    (location.state?.processos as Tprocesso[]) || [],
+  );
 
   const equipe = [
     {
@@ -103,7 +118,7 @@ export default function DistribuicaoCarga() {
             size: 10,
           },
         });
-        console.log("Entidade Pai", entidadePai);
+
         setPessoas(response.data?.elements || []);
       } catch (error) {
         console.error("Erro ao buscar pessoas", error);
@@ -113,7 +128,7 @@ export default function DistribuicaoCarga() {
     fetchPessoas();
   }, [idEntidadeWork]);
 
-  const atribuirProcesso = async (proc: any) => {
+  const atribuirProcesso = async (proc: Tprocesso) => {
     if (!pessoaSelecionada) {
       alert("Selecione um responsável antes de atribuir.");
       return;
@@ -247,7 +262,7 @@ export default function DistribuicaoCarga() {
             </TextField>
 
             <Stack spacing={2}>
-              {processos.map((proc) => (
+              {processos.map((proc: any) => (
                 <Paper
                   key={proc.id}
                   sx={{

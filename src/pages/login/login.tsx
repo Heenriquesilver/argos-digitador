@@ -35,7 +35,8 @@ export default function LoginPage() {
         await loginCode(email, credential);
       }
       navigate("/home");
-    } catch {
+    } catch (err) {
+      console.error("ERRO LOGIN:", err);
       setError("Falha no login. Verifique os dados.");
     } finally {
       setLoading(false);

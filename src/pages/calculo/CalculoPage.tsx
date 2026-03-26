@@ -37,6 +37,7 @@ type Tprioridade = "NORMAL" | "ALTA" | "URGENTE";
 type ProcessoRow = {
   tipoServico: string;
   id: number;
+  fase: string;
   processo: string;
   cliente: string;
   origem: string;
@@ -53,7 +54,6 @@ export default function CalculoPage() {
   const [selectedRow, setSelectedRow] = useState<ProcessoRow | null>(null);
   const [rows, setRows] = useState<ProcessoRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState("");
 
   const prioridadeLabelMap: Record<number, Tprioridade> = {
     1: "NORMAL",
@@ -66,7 +66,7 @@ export default function CalculoPage() {
     ProcessoRow[]
   >([]);
   const [pessoas, setPessoas] = useState<any[]>([]);
-  const [pessoaSelecionada, setPessoaSelecionada] = useState("");
+  const [pessoaSelecionada, setPessoaSelecionada] = useState<number | "">("");
 
   const { data: idEntidadeWork } = useGetEntidadeWork();
 
@@ -212,7 +212,6 @@ export default function CalculoPage() {
       if (!idEntidadeWork) return;
 
       setLoading(true);
-      setErro("");
 
       const entidade = idEntidadeWork;
 
@@ -261,7 +260,6 @@ export default function CalculoPage() {
       });
     } catch (error) {
       console.error("Erro ao buscar cálculos", error);
-      setErro("Erro ao buscar dados");
     } finally {
       setLoading(false);
     }
@@ -271,27 +269,27 @@ export default function CalculoPage() {
   //   buscarCalculos();
   // }, []);
 
-  useEffect(() => {
-    const fetchPessoas = async () => {
-      try {
-        const entidadePai = localStorage.getItem("idEntidadeUsuarioLogado");
+  // useEffect(() => {
+  //   const fetchPessoas = async () => {
+  //     try {
+  //       const entidadePai = localStorage.getItem("idEntidadeUsuarioLogado");
 
-        const response = await api.get("/api/v1/pessoa_fisica", {
-          params: {
-            entidade_pai: Number(entidadePai),
-            page: 0,
-            size: 10,
-          },
-        });
+  //       const response = await api.get("/api/v1/pessoa_fisica", {
+  //         params: {
+  //           entidade_pai: Number(entidadePai),
+  //           page: 0,
+  //           size: 10,
+  //         },
+  //       });
 
-        setPessoas(response.data?.elements || []);
-      } catch (error) {
-        console.error("Erro ao buscar pessoas", error);
-      }
-    };
+  //       setPessoas(response.data?.elements || []);
+  //     } catch (error) {
+  //       console.error("Erro ao buscar pessoas", error);
+  //     }
+  //   };
 
-    fetchPessoas();
-  }, [openModalDistribuir, pessoaSelecionada]);
+  //   fetchPessoas();
+  // }, [openModalDistribuir, pessoaSelecionada]);
 
   async function atribuirProcesso(proc: ProcessoRow) {
     try {
@@ -353,7 +351,7 @@ export default function CalculoPage() {
         flexDirection: "column",
         minHeight: "100%",
         width: "100%",
-        p: 3,
+        p: 4,
         boxSizing: "border-box",
       }}
     >
@@ -641,7 +639,7 @@ export default function CalculoPage() {
                 size="small"
                 label="Selecionar responsável"
                 value={pessoaSelecionada}
-                onChange={(e) => setPessoaSelecionada(e.target.value)}
+                onChange={(e) => setPessoaSelecionada(Number(e.target.value))}
                 sx={{ mb: 3 }}
               >
                 {pessoas.map((pessoa) => (

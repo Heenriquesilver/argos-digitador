@@ -21,7 +21,6 @@ export function AuthProvider({ children }: Props) {
         throw new Error(res.data.accessToken || "Usuário Inválido");
       }
 
-      // Salva tokens e usuário
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("IdEntidadePai", res.data.usuario.id);
