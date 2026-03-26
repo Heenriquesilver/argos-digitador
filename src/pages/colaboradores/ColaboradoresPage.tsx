@@ -274,7 +274,13 @@ export default function ColaboradoresPage() {
           </MenuItem>
           <MenuItem onClick={handleVincularEquipe}>Usuario</MenuItem>
 
-          <MenuItem onClick={handleVincularEquipe}>Vincular Equipe</MenuItem>
+          <MenuItem
+            onClick={() => {
+              navigate("/equipe");
+            }}
+          >
+            Vincular Equipe
+          </MenuItem>
         </Menu>
       </Box>
     </Box>

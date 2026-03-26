@@ -36,6 +36,23 @@ export default function NovoColaboradorPage() {
   const [entidadeOriginal, setEntidadeOriginal] = useState<number | null>(null);
   const [idColaborador, setIdColaborador] = useState<number | null>(null);
 
+  function maskCPF(value: string) {
+    return value
+      .replace(/\D/g, "") // remove tudo que não é número
+      .slice(0, 11) // limita a 11 dígitos
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  }
+
+  function maskTelefone(value: string) {
+    return value
+      .replace(/\D/g, "")
+      .slice(0, 11)
+      .replace(/(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{5})(\d)/, "$1-$2");
+  }
+
   useEffect(() => {
     async function carregarDados() {
       if (!id) return;
@@ -114,12 +131,16 @@ export default function NovoColaboradorPage() {
           </Typography>
 
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-            <TextField
-              label="ID"
-              value={idColaborador ?? ""}
-              InputProps={{ readOnly: true }}
-              sx={{ width: 200 }}
-            />
+            {isEdit ? (
+              ""
+            ) : (
+              <TextField
+                label="ID"
+                value={idColaborador ?? ""}
+                InputProps={{ readOnly: true }}
+                sx={{ width: 200 }}
+              />
+            )}
 
             <TextField
               fullWidth
@@ -128,18 +149,12 @@ export default function NovoColaboradorPage() {
               onChange={(e) => setNome(e.target.value)}
               required
             />
-            <TextField
-              fullWidth
-              label="Nome completo"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              required
-            />
+
             <TextField
               fullWidth
               label="CPF"
               value={cpf}
-              onChange={(e) => setCpf(e.target.value)}
+              onChange={(e) => setCpf(maskCPF(e.target.value))}
               required
             />
           </Stack>
@@ -149,7 +164,7 @@ export default function NovoColaboradorPage() {
               fullWidth
               label="Telefone"
               value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
+              onChange={(e) => setTelefone(maskTelefone(e.target.value))}
               required
               sx={{ width: 500 }}
             />
