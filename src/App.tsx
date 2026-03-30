@@ -15,6 +15,8 @@ import ColaboradoresPage from "./pages/colaboradores/ColaboradoresPage";
 import CalculoPage from "./pages/calculo/CalculoPage";
 import EquipePage from "./pages/equipe/equipePage";
 import NovoColaboradorPage from "./pages/novo-colaborador/novoColaborador";
+import NovoUsuarioPage from "./pages/novo-usuario/novoUsuario";
+import EmpreitadasPage from "./pages/empreitadas/empreitadasPage";
 
 // Layout e Rotas Privadas
 import PrivateRoute from "./routes/privateRoute";
@@ -53,6 +55,9 @@ export default function App() {
               path="/novo-colaborador/:id"
               element={<NovoColaboradorPage />}
             />
+            <Route path="/novo-usuario" element={<NovoUsuarioPage />} />
+            <Route path="/novo-usuario/:id" element={<NovoUsuarioPage />} />
+            <Route path="/empreitadas" element={<EmpreitadasPage />} />
             {/* Futuras páginas podem ser adicionadas aqui */}
             {/* <Route path="/agenda" element={<AgendaPage />} /> */}
           </Route>

@@ -272,7 +272,16 @@ export default function ColaboradoresPage() {
           >
             Editar
           </MenuItem>
-          <MenuItem onClick={handleVincularEquipe}>Usuario</MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (selectedRow) {
+                navigate(`/novo-usuario/${selectedRow.id}`);
+              }
+              handleCloseMenu();
+            }}
+          >
+            Usuário
+          </MenuItem>
 
           <MenuItem
             onClick={() => {

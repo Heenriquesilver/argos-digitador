@@ -17,12 +17,11 @@ import "dayjs/locale/pt-br";
 import { useParams } from "react-router-dom";
 
 import { useNavigate } from "react-router-dom";
-import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
+
 import api from "../../api/axios";
 
 export default function NovoColaboradorPage() {
   const navigate = useNavigate();
-  const { data: idEntidadeWork } = useGetEntidadeWork();
 
   const { id } = useParams();
   const isEdit = !!id;
@@ -38,8 +37,8 @@ export default function NovoColaboradorPage() {
 
   function maskCPF(value: string) {
     return value
-      .replace(/\D/g, "") // remove tudo que não é número
-      .slice(0, 11) // limita a 11 dígitos
+      .replace(/\D/g, "")
+      .slice(0, 11)
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
@@ -132,14 +131,14 @@ export default function NovoColaboradorPage() {
 
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             {isEdit ? (
-              ""
-            ) : (
               <TextField
                 label="ID"
                 value={idColaborador ?? ""}
                 InputProps={{ readOnly: true }}
                 sx={{ width: 200 }}
               />
+            ) : (
+              ""
             )}
 
             <TextField

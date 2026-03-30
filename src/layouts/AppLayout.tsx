@@ -34,7 +34,7 @@ const menuItems = [
   { label: "Comunicacao", icon: <PeopleIcon />, path: "/comunicacao" },
 
   { label: "Qualidade", icon: <PeopleIcon />, path: "/profissionais" },
-  { label: "Empreitadas", icon: <PeopleIcon />, path: "/profissionais" },
+  { label: "Empreitadas", icon: <PeopleIcon />, path: "/empreitadas" },
   { label: "Medicoes", icon: <PeopleIcon />, path: "/profissionais" },
   { label: "Equipe", icon: <PeopleIcon />, path: "/equipe" },
   { label: "Clientes", icon: <PeopleIcon />, path: "/profissionais" },
