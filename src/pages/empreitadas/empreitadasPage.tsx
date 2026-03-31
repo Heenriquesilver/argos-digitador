@@ -395,7 +395,7 @@ export default function EmpreitadasPage() {
               <Button
                 variant="contained"
                 sx={{ bgcolor: "#5c6cff", px: 4, height: "50px" }}
-                onClick={() => navigate("/nova-empresa")}
+                onClick={() => navigate("/novo-pacote")}
               >
                 Criar Pacote
               </Button>

@@ -429,6 +429,13 @@ export default function CalculoPage() {
       <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
         <Button
           variant="contained"
+          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+          // onClick={() => setOpenFilter(!openFilter)}
+        >
+          Empreitada
+        </Button>
+        <Button
+          variant="contained"
           //   startIcon={<FilterListIcon />}
           disabled={selectionModel.ids.size === 0}
           sx={{ bgcolor: "#5c6cff", py: 1.3 }}
