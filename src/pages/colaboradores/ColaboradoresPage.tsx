@@ -70,10 +70,10 @@ export default function ColaboradoresPage() {
     setSelectedRow(null);
   };
 
-  const handleVincularEquipe = () => {
-    console.log("Vincular equipe:", selectedRow);
-    handleCloseMenu();
-  };
+  // const handleVincularEquipe = () => {
+  //   console.log("Vincular equipe:", selectedRow);
+  //   handleCloseMenu();
+  // };
 
   const open = Boolean(anchorEl);
 
@@ -148,7 +148,7 @@ export default function ColaboradoresPage() {
         nome: item.nome,
         cpf: item.cpf || "-",
         telefone: item.telefone || "-",
-        entidade: item.entidade?.id ?? "-", // 👈 aqui
+        entidade: item.entidade?.id?.toString() ?? "-",
       }));
 
       setRows(usuarios);

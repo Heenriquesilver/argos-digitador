@@ -36,7 +36,7 @@ export default function EmpreitadasPage() {
   const [loading, setLoading] = useState(false);
 
   const [openModal, setOpenModal] = useState(false);
-  const [equipesSelect, setEquipesSelect] = useState<TEquipe[]>([]);
+  const [equipesSelect] = useState<TEquipe[]>([]);
   const [equipeSelecionada, setEquipeSelecionada] = useState<number | "">("");
   const [nomeEquipeSelecionada, setNomeEquipeSelecionada] = useState("");
   const [erroMaxProcessos, setErroMaxProcessos] = useState("");
@@ -331,26 +331,26 @@ export default function EmpreitadasPage() {
       headerClassName: "cor-background-headerName",
     },
   ];
-  const abrirModal = async () => {
-    setOpenModal(true);
+  // const abrirModal = async () => {
+  //   setOpenModal(true);
 
-    try {
-      const response = await api.get("/api/v1/equipe", {
-        params: { page: 0, size: 100 },
-      });
+  //   try {
+  //     const response = await api.get("/api/v1/equipe", {
+  //       params: { page: 0, size: 100 },
+  //     });
 
-      const data = response.data?.elements || [];
+  //     const data = response.data?.elements || [];
 
-      setEquipesSelect(
-        data.map((item: any) => ({
-          id: item.id,
-          titulo: item.titulo,
-        })),
-      );
-    } catch (e) {
-      console.error("Erro ao carregar equipes");
-    }
-  };
+  //     setEquipesSelect(
+  //       data.map((item: any) => ({
+  //         id: item.id,
+  //         titulo: item.titulo,
+  //       })),
+  //     );
+  //   } catch (e) {
+  //     console.error("Erro ao carregar equipes");
+  //   }
+  // };
 
   return (
     <Box

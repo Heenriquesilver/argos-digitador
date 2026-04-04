@@ -17,8 +17,6 @@ export default function NovoUsuarioPage() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const isEdit = !!id;
-
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");

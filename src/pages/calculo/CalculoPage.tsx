@@ -26,6 +26,7 @@ import MetricCard from "../../components/MetricCard";
 import { useNavigate } from "react-router-dom";
 import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
 import api from "../../api/axios";
+import Autocomplete from "@mui/material/Autocomplete";
 
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
@@ -55,6 +56,11 @@ export default function CalculoPage() {
   const [rows, setRows] = useState<ProcessoRow[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [openModalEmpreitada, setOpenModalEmpreitada] = useState(false);
+  const [pacotes, setPacotes] = useState<any[]>([]);
+  const [pacoteSelecionado, setPacoteSelecionado] = useState<any | null>(null);
+  const [loadingPacotes, setLoadingPacotes] = useState(false);
+
   const prioridadeLabelMap: Record<number, Tprioridade> = {
     1: "NORMAL",
     2: "ALTA",
@@ -69,6 +75,7 @@ export default function CalculoPage() {
   const [pessoaSelecionada, setPessoaSelecionada] = useState<number | "">("");
 
   const { data: idEntidadeWork } = useGetEntidadeWork();
+  const responsavel = localStorage.getItem("idEntidadeUsuarioLogado");
 
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
     type: "include",
@@ -77,6 +84,15 @@ export default function CalculoPage() {
 
   function formatDate(date: Date) {
     return date.toISOString().split("T")[0];
+  }
+
+  function formatToISO(data: Date) {
+    return data.toISOString();
+  }
+  function adicionarDias(data: Date, dias: number) {
+    const novaData = new Date(data);
+    novaData.setDate(novaData.getDate() + dias);
+    return novaData;
   }
 
   const hoje = new Date();
@@ -106,6 +122,38 @@ export default function CalculoPage() {
     setAnchorEl(event.currentTarget);
     setSelectedRow(row);
   };
+  async function criarPacoteItens() {
+    try {
+      if (!pacoteSelecionado) {
+        alert("Selecione um pacote");
+        return;
+      }
+
+      if (processosSelecionados.length === 0) {
+        alert("Nenhum processo selecionado");
+        return;
+      }
+
+      const requests = processosSelecionados.map((proc) =>
+        api.post("/api/v1/pacote-calculo-item", {
+          pacoteCalculo: pacoteSelecionado.id,
+          calculoJudicial: proc.id,
+        }),
+      );
+
+      await Promise.all(requests);
+
+      alert("Itens vinculados com sucesso!");
+
+      setOpenModalEmpreitada(false);
+      setPacoteSelecionado(null);
+      setProcessosSelecionados([]);
+
+      buscarCalculos(); // opcional
+    } catch (error) {
+      console.error("Erro ao criar itens do pacote", error);
+    }
+  }
 
   const columns: GridColDef<ProcessoRow>[] = [
     {
@@ -344,6 +392,37 @@ export default function CalculoPage() {
     }
   }, [openModalDistribuir]);
 
+  async function buscarPacotes(filtro: string) {
+    try {
+      if (!idEntidadeWork) return;
+
+      setLoadingPacotes(true);
+
+      const payload = {
+        titulo: filtro,
+        numeroProcesso: "",
+        responsavel: 0,
+        status: 1,
+        dataInicio: formatToISO(adicionarDias(hoje, -30)),
+        dataTermino: formatToISO(adicionarDias(hoje, 30)),
+      };
+
+      const res = await api.post(
+        `/api/v1/pacote-calculo/filtro/${idEntidadeWork}`,
+        payload,
+        {
+          params: { page: 0, size: 10 },
+        },
+      );
+
+      setPacotes(res.data.elements);
+    } catch (error) {
+      console.error("Erro ao buscar pacotes", error);
+    } finally {
+      setLoadingPacotes(false);
+    }
+  }
+
   return (
     <Box
       sx={{
@@ -430,7 +509,16 @@ export default function CalculoPage() {
         <Button
           variant="contained"
           sx={{ bgcolor: "#5c6cff", py: 1.3 }}
-          // onClick={() => setOpenFilter(!openFilter)}
+          onClick={() => {
+            const idsSelecionados = Array.from(selectionModel.ids);
+
+            const processos = rows.filter((row) =>
+              idsSelecionados.includes(row.id),
+            );
+
+            setProcessosSelecionados(processos);
+            setOpenModalEmpreitada(true);
+          }}
         >
           Empreitada
         </Button>
@@ -700,6 +788,58 @@ export default function CalculoPage() {
                   </Paper>
                 ))}
               </Stack>
+            </Paper>
+          </Box>
+        </Modal>
+        <Modal
+          open={openModalEmpreitada}
+          onClose={() => setOpenModalEmpreitada(false)}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 1200,
+            }}
+          >
+            <Paper sx={{ p: 3, borderRadius: 3 }}>
+              <Typography fontWeight={600} mb={2}>
+                Vincular à Empreitada
+              </Typography>
+
+              {/* AUTOCOMPLETE */}
+              <Autocomplete
+                options={pacotes}
+                getOptionLabel={(option) => option.titulo || ""}
+                loading={loadingPacotes}
+                onInputChange={(_, value) => buscarPacotes(value)}
+                onChange={(_, value) => setPacoteSelecionado(value)}
+                renderInput={(params) => (
+                  <TextField {...params} label="Buscar Pacote" size="small" />
+                )}
+                sx={{ mb: 3 }}
+              />
+
+              {/* TABELA COM SELECIONADOS */}
+              <DataGrid
+                rows={processosSelecionados}
+                columns={columns}
+                autoHeight
+                hideFooter
+              />
+
+              {/* BOTÃO */}
+              <Box display="flex" justifyContent="flex-end" mt={2}>
+                <Button
+                  variant="contained"
+                  sx={{ bgcolor: "#5c6cff" }}
+                  onClick={criarPacoteItens}
+                >
+                  Criar
+                </Button>
+              </Box>
             </Paper>
           </Box>
         </Modal>
