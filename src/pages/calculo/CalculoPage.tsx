@@ -75,7 +75,6 @@ export default function CalculoPage() {
   const [pessoaSelecionada, setPessoaSelecionada] = useState<number | "">("");
 
   const { data: idEntidadeWork } = useGetEntidadeWork();
-  const responsavel = localStorage.getItem("idEntidadeUsuarioLogado");
 
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
     type: "include",

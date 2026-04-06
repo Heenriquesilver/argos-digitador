@@ -114,7 +114,7 @@ export default function ProcessoPage() {
     try {
       const response = await api.get("/api/v1/processo-judicial", {
         params: {
-          termo: "", // usa o número que você criou
+          termo: "",
           page: 0,
           size: 100,
         },

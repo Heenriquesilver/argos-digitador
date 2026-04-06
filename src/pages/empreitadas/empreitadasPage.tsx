@@ -14,13 +14,14 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import type { GridRowSelectionModel } from "@mui/x-data-grid";
 import { Snackbar, Alert } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { Collapse } from "@mui/material";
 
 import { ptBR } from "@mui/x-data-grid/locales";
 import Grid from "@mui/material/GridLegacy";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import api from "../../api/axios";
 
@@ -51,7 +52,18 @@ export default function EmpreitadasPage() {
     "success",
   );
 
+  const [openFilter, setOpenFilter] = useState(false);
+
+  const [filtros, setFiltros] = useState({
+    titulo: "",
+    status: "",
+    periodoInicio: "",
+    periodoFim: "",
+  });
+
   const { data: idEntidadeWork } = useGetEntidadeWork();
+
+  const responsavel = localStorage.getItem("idEntidadeUsuarioLogado");
 
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
     type: "include",
@@ -62,83 +74,151 @@ export default function EmpreitadasPage() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchEquipes = async () => {
-      try {
-        setLoading(true);
+  async function buscarEmpreitadas() {
+    try {
+      if (!idEntidadeWork) return;
 
-        const response = await api.get("/api/v1/equipe", {
-          params: {
-            page: 0,
-            size: 10,
-          },
-        });
+      setLoading(true);
 
-        const data = response.data?.elements || [];
+      const payload = {
+        titulo: filtros.titulo || "",
+        numeroProcesso: "",
+        responsavel: responsavel,
+        status: filtros.status ? Number(filtros.status) : 0,
+        dataInicio: filtros.periodoInicio || null,
+        dataTermino: filtros.periodoFim || null,
+      };
 
-        // 🔥 Mapeia pro formato do DataGrid
-        const formatted = data.map((item: any) => ({
-          id: item.id,
-          titulo: item.titulo,
-        }));
+      const res = await api.post(
+        `/api/v1/pacote-calculo/filtro/${idEntidadeWork}`,
+        payload,
+        {
+          params: { page: 0, size: 10 },
+        },
+      );
 
-        setRows(formatted);
-      } catch (error) {
-        console.error("Erro ao buscar equipes", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const formatted = res.data?.elements.map((item: any) => ({
+        id: item.id,
+        titulo: item.titulo,
+      }));
 
-    fetchEquipes();
-  }, []);
+      setRows(formatted || []);
+    } catch (error) {
+      console.error("Erro ao buscar empreitadas", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const fetchMembros = async (id: number) => {
+  // useEffect(() => {
+  //   const fetchEquipes = async () => {
+  //     try {
+  //       setLoading(true);
+
+  //       const response = await api.get("/api/v1/equipe", {
+  //         params: {
+  //           page: 0,
+  //           size: 10,
+  //         },
+  //       });
+
+  //       const data = response.data?.elements || [];
+
+  //       // 🔥 Mapeia pro formato do DataGrid
+  //       const formatted = data.map((item: any) => ({
+  //         id: item.id,
+  //         titulo: item.titulo,
+  //       }));
+
+  //       setRows(formatted);
+  //     } catch (error) {
+  //       console.error("Erro ao buscar equipes", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchEquipes();
+  // }, []);
+
+  // const fetchMembros = async (id: number) => {
+  //   try {
+  //     setLoadingMembros(true);
+
+  //     const response = await api.get(`/api/v1/membro-equipe/equipe/${id}`, {
+  //       params: {
+  //         page: 1,
+  //         size: 10,
+  //       },
+  //     });
+
+  //     const data = response.data?.elements || [];
+
+  //     const formatted = data.map((item: any) => ({
+  //       id: item.id,
+  //       nome: item.membro?.nome,
+  //       cpf: item.membro?.cpf,
+  //       telefone: item.membro?.telefone,
+  //       maxProcessosAlocados: item.maxProcessosAlocados,
+  //     }));
+
+  //     setMembros(formatted);
+  //   } catch (error) {
+  //     console.error("Erro ao buscar membros", error);
+  //   } finally {
+  //     setLoadingMembros(false);
+  //   }
+  // };
+  async function fetchCalculosPacote(id: number) {
     try {
       setLoadingMembros(true);
 
-      const response = await api.get(`/api/v1/membro-equipe/equipe/${id}`, {
-        params: {
-          page: 0,
-          size: 10,
+      const response = await api.get(`/api/v1/pacote-calculo-item/${id}`);
+
+      console.log("RESPOSTA:", response.data);
+
+      const item = response.data;
+
+      const formatted = [
+        {
+          id:
+            item.calculoJudicial.id ??
+            item.calculoJudicial?.id ??
+            `${Date.now()}-${Math.random()}`,
+          numeroProcesso:
+            item.calculoJudicial.processoJudicial?.numeroProcesso ||
+            "Sem descrição",
+          cliente:
+            item.calculoJudicial?.processoJudicial.cliente.nomeFantasia || 0,
+          prazo: item.calculoJudicial?.prazo || "-",
         },
-      });
-
-      const data = response.data?.elements || [];
-
-      const formatted = data.map((item: any) => ({
-        id: item.id,
-        nome: item.membro?.nome,
-        cpf: item.membro?.cpf,
-        telefone: item.membro?.telefone,
-        maxProcessosAlocados: item.maxProcessosAlocados,
-      }));
+      ];
 
       setMembros(formatted);
     } catch (error) {
-      console.error("Erro ao buscar membros", error);
+      console.error("Erro ao buscar cálculos do pacote", error);
     } finally {
       setLoadingMembros(false);
     }
-  };
+  }
 
-  const deletarMembro = async (id: number) => {
-    try {
-      await api.delete(`/api/v1/membro-equipe/${id}`);
+  // const deletarMembro = async (id: number) => {
+  //   try {
+  //     await api.delete(`/api/v1/membro-equipe/${id}`);
 
-      setMensagemSnackbar("Membro removido com sucesso!");
-      setTipoSnackbar("success");
-      setOpenSnackbar(true);
+  //     setMensagemSnackbar("Membro removido com sucesso!");
+  //     setTipoSnackbar("success");
+  //     setOpenSnackbar(true);
 
-      setMembros((prev) => prev.filter((m) => m.id !== id));
-    } catch (error) {
-      console.error("Erro ao remover membro", error);
+  //     setMembros((prev) => prev.filter((m) => m.id !== id));
+  //   } catch (error) {
+  //     console.error("Erro ao remover membro", error);
 
-      setMensagemSnackbar("Erro ao remover membro");
-      setTipoSnackbar("error");
-      setOpenSnackbar(true);
-    }
-  };
+  //     setMensagemSnackbar("Erro ao remover membro");
+  //     setTipoSnackbar("error");
+  //     setOpenSnackbar(true);
+  //   }
+  // };
 
   const buscarPessoas = async () => {
     try {
@@ -228,14 +308,14 @@ export default function EmpreitadasPage() {
         <Box
           display="flex"
           gap={1}
-          justifyContent="flex-end" // 👈 alinha à direita
+          justifyContent="flex-end"
           alignItems="center"
-          width="100%" // 👈 ocupa toda a célula
+          width="100%"
         >
           <IconButton
             size="small"
             onClick={() => {
-              fetchMembros(params.row.id);
+              fetchCalculosPacote(params.row.id);
               setNomeEquipeSelecionada(params.row.titulo);
             }}
           >
@@ -278,57 +358,22 @@ export default function EmpreitadasPage() {
     {
       field: "id",
       headerName: "ID",
-      flex: 0.2,
-      headerClassName: "cor-background-headerName",
+      flex: 0.3,
     },
     {
-      field: "maxProcessosAlocados",
-      headerName: "Max. Processos",
+      field: "numeroProcesso",
+      headerName: "Número do Processo",
+      flex: 0.8,
+    },
+    {
+      field: "cliente",
+      headerName: "Cliente",
+      flex: 1,
+    },
+    {
+      field: "prazo",
+      headerName: "Prazo",
       flex: 0.5,
-      headerClassName: "cor-background-headerName",
-    },
-
-    {
-      field: "nome",
-      headerName: "Nome",
-      flex: 1,
-      headerClassName: "cor-background-headerName",
-    },
-    {
-      field: "cpf",
-      headerName: "CPF",
-      width: 150,
-      headerClassName: "cor-background-headerName",
-    },
-    {
-      field: "telefone",
-      headerName: "Telefone",
-      width: 150,
-      headerClassName: "cor-background-headerName",
-    },
-    {
-      field: "acoes",
-      headerName: "Ações",
-      sortable: false,
-      filterable: false,
-      flex: 1,
-      minWidth: 200,
-      align: "right",
-      headerAlign: "right",
-      renderCell: (params) => (
-        <Box
-          display="flex"
-          gap={1}
-          justifyContent="flex-end" // 👈 alinha à direita
-          alignItems="center"
-          width="100%" // 👈 ocupa toda a célula
-        >
-          <IconButton size="small" onClick={() => deletarMembro(params.row.id)}>
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      ),
-      headerClassName: "cor-background-headerName",
     },
   ];
   // const abrirModal = async () => {
@@ -388,7 +433,7 @@ export default function EmpreitadasPage() {
               <Button
                 variant="contained"
                 sx={{ bgcolor: "#5c6cff", px: 4, height: "50px" }}
-                onClick={() => navigate("/nova-empresa")}
+                onClick={() => setOpenFilter(!openFilter)}
               >
                 Filtrar
               </Button>
@@ -400,6 +445,85 @@ export default function EmpreitadasPage() {
                 Criar Pacote
               </Button>
             </Box>
+            <Collapse in={openFilter}>
+              <Box
+                sx={{
+                  p: 3,
+                  mb: 2,
+                  borderRadius: 2,
+                  backgroundColor: "#F9FAFB",
+                  border: "1px solid #E5E7EB",
+                }}
+              >
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Título"
+                      value={filtros.titulo}
+                      onChange={(e) =>
+                        setFiltros({ ...filtros, titulo: e.target.value })
+                      }
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      select
+                      label="Status"
+                      value={filtros.status}
+                      onChange={(e) =>
+                        setFiltros({ ...filtros, status: e.target.value })
+                      }
+                    >
+                      <MenuItem value={1}>Ativo</MenuItem>
+                      <MenuItem value={2}>Inativo</MenuItem>
+                    </TextField>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      type="date"
+                      label="Início"
+                      InputLabelProps={{ shrink: true }}
+                      value={filtros.periodoInicio}
+                      onChange={(e) =>
+                        setFiltros({
+                          ...filtros,
+                          periodoInicio: e.target.value,
+                        })
+                      }
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      type="date"
+                      label="Fim"
+                      InputLabelProps={{ shrink: true }}
+                      value={filtros.periodoFim}
+                      onChange={(e) =>
+                        setFiltros({ ...filtros, periodoFim: e.target.value })
+                      }
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} display="flex" justifyContent="flex-end">
+                    <Button
+                      variant="contained"
+                      sx={{ bgcolor: "#5c6cff" }}
+                      onClick={buscarEmpreitadas}
+                      disabled={loading}
+                    >
+                      {loading ? "Buscando..." : "Aplicar"}
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Collapse>
             <DataGrid
               rows={rows}
               columns={columns}

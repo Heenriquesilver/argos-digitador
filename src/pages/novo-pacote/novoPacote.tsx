@@ -54,11 +54,7 @@ export default function NovoPacotePage() {
   }
 
   function converterValorParaNumero(valor: string) {
-    return (
-      Number(
-        valor.replace(/\D/g, ""), // remove tudo que não é número
-      ) / 100
-    );
+    return Number(valor.replace(/\D/g, "")) / 100;
   }
 
   function getPrioridadeValue(value: string) {
