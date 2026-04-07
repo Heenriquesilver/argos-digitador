@@ -12,6 +12,13 @@ import {
   FormControlLabel,
   Radio,
 } from "@mui/material";
+
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+
 import { useAuth } from "../../auth/useAuth";
 import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
 import { useNavigate } from "react-router-dom";
@@ -175,47 +182,54 @@ export default function NovoPacotePage() {
             /> */}
             <Stack direction={"row"} gap={2}>
               <TextField
-                fullWidth
                 label="Valor"
                 value={valor}
                 onChange={(e) => {
                   const valorFormatado = formatarMoeda(e.target.value);
                   setValor(valorFormatado);
                 }}
+                sx={{ width: 300 }}
               />
 
-              <TextField
-                fullWidth
-                label="Prazo"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={prazo}
-                onChange={(e) => setPrazo(e.target.value)}
-                required
-              />
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="pt-br"
+              >
+                <DatePicker
+                  label="Prazo"
+                  value={prazo ? dayjs(prazo) : null}
+                  onChange={(newValue) =>
+                    setPrazo(newValue ? newValue.format("YYYY-MM-DD") : "")
+                  }
+                  sx={{ width: 300 }}
+                />
+              </LocalizationProvider>
             </Stack>
+            <FormControl>
+              <FormLabel sx={{ color: "#5c6cff" }}>Prioridade</FormLabel>
+              <RadioGroup
+                row
+                value={prioridade}
+                onChange={(e) => setPrioridade(e.target.value)}
+              >
+                <FormControlLabel
+                  value="NORMAL"
+                  control={<Radio />}
+                  label="NORMAL"
+                />
+                <FormControlLabel
+                  value="ALTA"
+                  control={<Radio />}
+                  label="ALTA"
+                />
+                <FormControlLabel
+                  value="URGENTE"
+                  control={<Radio />}
+                  label="URGENTE"
+                />
+              </RadioGroup>
+            </FormControl>
           </Stack>
-
-          <FormControl>
-            <FormLabel sx={{ color: "#5c6cff" }}>Prioridade</FormLabel>
-            <RadioGroup
-              row
-              value={prioridade}
-              onChange={(e) => setPrioridade(e.target.value)}
-            >
-              <FormControlLabel
-                value="NORMAL"
-                control={<Radio />}
-                label="NORMAL"
-              />
-              <FormControlLabel value="ALTA" control={<Radio />} label="ALTA" />
-              <FormControlLabel
-                value="URGENTE"
-                control={<Radio />}
-                label="URGENTE"
-              />
-            </RadioGroup>
-          </FormControl>
 
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <TextField

@@ -136,8 +136,8 @@ export default function ProcessoPage() {
         }),
       );
 
-      setRowsOriginal(processos); // guarda original
-      setRows(processos); // mostra na tabela
+      setRowsOriginal(processos);
+      setRows(processos);
     } catch (error: any) {
       console.error("Erro ao buscar processos", error.response?.data || error);
       setRows([]);

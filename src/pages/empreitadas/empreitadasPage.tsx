@@ -16,6 +16,12 @@ import { Snackbar, Alert } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { Collapse } from "@mui/material";
 
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+
 import { ptBR } from "@mui/x-data-grid/locales";
 import Grid from "@mui/material/GridLegacy";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
@@ -483,32 +489,59 @@ export default function EmpreitadasPage() {
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Início"
-                      InputLabelProps={{ shrink: true }}
-                      value={filtros.periodoInicio}
-                      onChange={(e) =>
-                        setFiltros({
-                          ...filtros,
-                          periodoInicio: e.target.value,
-                        })
-                      }
-                    />
+                    <LocalizationProvider
+                      dateAdapter={AdapterDayjs}
+                      adapterLocale="pt-br"
+                    >
+                      <DatePicker
+                        label="Período Início"
+                        value={
+                          filtros.periodoInicio
+                            ? dayjs(filtros.periodoInicio)
+                            : null
+                        }
+                        onChange={(newValue) =>
+                          setFiltros({
+                            ...filtros,
+                            periodoInicio: newValue
+                              ? newValue.format("YYYY-MM-DD")
+                              : "",
+                          })
+                        }
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Fim"
-                      InputLabelProps={{ shrink: true }}
-                      value={filtros.periodoFim}
-                      onChange={(e) =>
-                        setFiltros({ ...filtros, periodoFim: e.target.value })
-                      }
-                    />
+                    <LocalizationProvider
+                      dateAdapter={AdapterDayjs}
+                      adapterLocale="pt-br"
+                    >
+                      <DatePicker
+                        label="Período Fim"
+                        value={
+                          filtros.periodoFim ? dayjs(filtros.periodoFim) : null
+                        }
+                        onChange={(newValue) =>
+                          setFiltros({
+                            ...filtros,
+                            periodoFim: newValue
+                              ? newValue.format("YYYY-MM-DD")
+                              : "",
+                          })
+                        }
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
                   </Grid>
 
                   <Grid item xs={12} display="flex" justifyContent="flex-end">
