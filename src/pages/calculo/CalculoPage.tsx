@@ -12,13 +12,14 @@ import {
   MenuItem,
 } from "@mui/material";
 import Menu from "@mui/material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
 
 import Grid from "@mui/material/GridLegacy";
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridRowId, GridRowSelectionModel } from "@mui/x-data-grid";
 import { useState, useEffect } from "react";
 import { ptBR } from "@mui/x-data-grid/locales";
-import AddIcon from "@mui/icons-material/Add";
+
 import FilterListIcon from "@mui/icons-material/FilterList";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import type { GridColDef } from "@mui/x-data-grid";
@@ -32,6 +33,8 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+
+import SnackInfo from "../../components/snack-info/SnackInfo";
 
 type Tprioridade = "NORMAL" | "ALTA" | "URGENTE";
 
@@ -47,6 +50,12 @@ type ProcessoRow = {
   prazo: string;
 };
 
+type StatusOption = {
+  id: number;
+  titulo: string;
+  backcolor: string;
+};
+
 export default function CalculoPage() {
   const navigate = useNavigate();
 
@@ -55,11 +64,26 @@ export default function CalculoPage() {
   const [selectedRow, setSelectedRow] = useState<ProcessoRow | null>(null);
   const [rows, setRows] = useState<ProcessoRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMessage, setSnackMessage] = useState("");
+  const [snackType, setSnackType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("success");
+
+  const showSnack = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "success",
+  ) => {
+    setSnackMessage(message);
+    setSnackType(type);
+    setSnackOpen(true);
+  };
 
   const [openModalEmpreitada, setOpenModalEmpreitada] = useState(false);
   const [pacotes, setPacotes] = useState<any[]>([]);
   const [pacoteSelecionado, setPacoteSelecionado] = useState<any | null>(null);
   const [loadingPacotes, setLoadingPacotes] = useState(false);
+  const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
 
   const prioridadeLabelMap: Record<number, Tprioridade> = {
     1: "NORMAL",
@@ -71,8 +95,13 @@ export default function CalculoPage() {
   const [processosSelecionados, setProcessosSelecionados] = useState<
     ProcessoRow[]
   >([]);
-  const [pessoas, setPessoas] = useState<any[]>([]);
-  const [pessoaSelecionada, setPessoaSelecionada] = useState<number | "">("");
+
+  const [equipes, setEquipes] = useState<any[]>([]);
+  const [equipeSelecionada, setEquipeSelecionada] = useState<number | null>(
+    null,
+  );
+  const [membrosEquipe, setMembrosEquipe] = useState<any[]>([]);
+  const [membroSelecionado, setMembroSelecionado] = useState<number | "">("");
 
   const { data: idEntidadeWork } = useGetEntidadeWork();
 
@@ -121,10 +150,11 @@ export default function CalculoPage() {
     setAnchorEl(event.currentTarget);
     setSelectedRow(row);
   };
+
   async function criarPacoteItens() {
     try {
       if (!pacoteSelecionado) {
-        alert("Selecione um pacote");
+        showSnack("Calculo criado com sucesso!", "success");
         return;
       }
 
@@ -133,26 +163,77 @@ export default function CalculoPage() {
         return;
       }
 
-      const requests = processosSelecionados.map((proc) =>
-        api.post("/api/v1/pacote-calculo-item", {
-          pacoteCalculo: pacoteSelecionado.id,
-          calculoJudicial: proc.id,
+      console.log("Itens para envio:", processosSelecionados);
+
+      await Promise.all(
+        processosSelecionados.map(async (proc) => {
+          console.log("Enviando:", proc.id);
+
+          return api.post("/api/v1/pacote-calculo-item", {
+            pacoteCalculo: pacoteSelecionado.id,
+            calculoJudicial: proc.id,
+          });
         }),
       );
 
-      await Promise.all(requests);
-
-      alert("Itens vinculados com sucesso!");
+      showSnack("Item realocado com sucesso!", "success");
 
       setOpenModalEmpreitada(false);
       setPacoteSelecionado(null);
       setProcessosSelecionados([]);
 
-      buscarCalculos(); // opcional
+      buscarCalculos();
     } catch (error) {
       console.error("Erro ao criar itens do pacote", error);
     }
   }
+
+  async function buscarStatus() {
+    try {
+      const res = await api.get("/api/v1/status-calculo", {
+        params: { page: 0, size: 20 },
+      });
+
+      setStatusOptions(res.data.elements);
+    } catch (error) {
+      console.error("Erro ao buscar status", error);
+    }
+  }
+
+  async function buscarEquipes() {
+    try {
+      const res = await api.get("/api/v1/equipe", {
+        params: { page: 0, size: 100 },
+      });
+
+      setEquipes(res.data.elements);
+    } catch (error) {
+      console.error("Erro ao buscar equipes", error);
+    }
+  }
+
+  async function buscarMembrosEquipe(id: number) {
+    try {
+      const res = await api.get(`/api/v1/membro-equipe/equipe/${id}`, {
+        params: { page: 0, size: 100 },
+      });
+
+      setMembrosEquipe(
+        res.data.elements.map((item: any) => ({
+          id: item.membro?.id,
+          nome: item.membro?.nome,
+        })),
+      );
+    } catch (error) {
+      console.error("Erro ao buscar membros", error);
+    }
+  }
+
+  useEffect(() => {
+    if (openModalDistribuir) {
+      buscarEquipes();
+    }
+  }, [openModalDistribuir]);
 
   const columns: GridColDef<ProcessoRow>[] = [
     {
@@ -195,20 +276,24 @@ export default function CalculoPage() {
       field: "status",
       headerName: "Status",
       flex: 1,
-      renderCell: (params) => (
-        <Chip
-          size="small"
-          label={params.value}
-          color={
-            params.value === "Finalizado"
-              ? "success"
-              : params.value === "Em Análise"
-                ? "warning"
-                : "info"
-          }
-        />
-      ),
       headerClassName: "cor-background-headerName",
+      renderCell: (params) => {
+        const status = statusOptions.find((s) => s.titulo === params.value);
+
+        return (
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box
+              sx={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                backgroundColor: status?.backcolor || "#ccc",
+              }}
+            />
+            {params.value}
+          </Box>
+        );
+      },
     },
     {
       field: "prioridade",
@@ -256,6 +341,7 @@ export default function CalculoPage() {
 
   async function buscarCalculos() {
     try {
+      console.log("idEntidadeWork", idEntidadeWork);
       if (!idEntidadeWork) return;
 
       setLoading(true);
@@ -312,9 +398,9 @@ export default function CalculoPage() {
     }
   }
 
-  // useEffect(() => {
-  //   buscarCalculos();
-  // }, []);
+  useEffect(() => {
+    buscarStatus();
+  }, []);
 
   // useEffect(() => {
   //   const fetchPessoas = async () => {
@@ -340,7 +426,7 @@ export default function CalculoPage() {
 
   async function atribuirProcesso(proc: ProcessoRow) {
     try {
-      if (!pessoaSelecionada) {
+      if (!membroSelecionado) {
         alert("Selecione um responsável");
         return;
       }
@@ -348,7 +434,7 @@ export default function CalculoPage() {
       const payload = {
         processoJudicial: proc.id,
         status: 2,
-        responsavel: Number(pessoaSelecionada),
+        responsavel: Number(membroSelecionado),
         prioridade: "1",
         alocacao: new Date().toISOString(),
         inicio: new Date().toISOString(),
@@ -361,7 +447,7 @@ export default function CalculoPage() {
 
       setProcessosSelecionados((prev) => prev.filter((p) => p.id !== proc.id));
 
-      alert("Processo atribuído com sucesso");
+      showSnack("Calculo realocado com sucesso!", "success");
 
       buscarCalculos(); // atualiza tabela
     } catch (error) {
@@ -369,27 +455,27 @@ export default function CalculoPage() {
     }
   }
 
-  async function buscarPessoas() {
-    try {
-      const res = await api.get("/api/v1/pessoa_fisica", {
-        params: {
-          entidade_pai: idEntidadeWork,
-          page: 0,
-          size: 50,
-        },
-      });
+  // async function buscarPessoas() {
+  //   try {
+  //     const res = await api.get("/api/v1/pessoa_fisica", {
+  //       params: {
+  //         entidade_pai: idEntidadeWork,
+  //         page: 0,
+  //         size: 50,
+  //       },
+  //     });
 
-      setPessoas(res.data.elements);
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  //     setPessoas(res.data.elements);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }
 
-  useEffect(() => {
-    if (openModalDistribuir) {
-      buscarPessoas();
-    }
-  }, [openModalDistribuir]);
+  // useEffect(() => {
+  //   if (openModalDistribuir) {
+  //     buscarPessoas();
+  //   }
+  // }, [openModalDistribuir]);
 
   async function buscarPacotes(filtro: string) {
     try {
@@ -421,6 +507,15 @@ export default function CalculoPage() {
       setLoadingPacotes(false);
     }
   }
+
+  const handleCalcular = () => {
+    if (selectedRow) {
+      navigate(`/calculo/${selectedRow.id}`, {
+        state: selectedRow,
+      });
+    }
+    handleCloseMenu();
+  };
 
   return (
     <Box
@@ -454,11 +549,11 @@ export default function CalculoPage() {
         >
           <Button
             variant="contained"
-            startIcon={<AddIcon />}
+            // startIcon={<AddIcon />}
             sx={{ bgcolor: "#5c6cff", py: 1.3 }}
-            onClick={() => navigate("/novo-processo")}
+            onClick={() => navigate("/distribuicao-carga")}
           >
-            Novo Processo
+            Carga de trabalho
           </Button>
         </Grid>
       </Grid>
@@ -509,7 +604,9 @@ export default function CalculoPage() {
           variant="contained"
           sx={{ bgcolor: "#5c6cff", py: 1.3 }}
           onClick={() => {
-            const idsSelecionados = Array.from(selectionModel.ids);
+            const idsSelecionados = Array.isArray(selectionModel)
+              ? selectionModel
+              : Array.from(selectionModel.ids || []);
 
             const processos = rows.filter((row) =>
               idsSelecionados.includes(row.id),
@@ -585,17 +682,29 @@ export default function CalculoPage() {
 
             <Grid item xs={12} md={4}>
               <TextField
-                fullWidth
                 select
+                fullWidth
                 label="Status"
                 value={filtros.status}
                 onChange={(e) =>
                   setFiltros({ ...filtros, status: e.target.value })
                 }
               >
-                <MenuItem value={1}>Em Análise</MenuItem>
-                <MenuItem value={2}>Calculando</MenuItem>
-                <MenuItem value={3}>Finalizado</MenuItem>
+                {statusOptions.map((status) => (
+                  <MenuItem key={status.id} value={status.id}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Box
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: "50%",
+                          backgroundColor: status.backcolor,
+                        }}
+                      />
+                      {status.titulo}
+                    </Box>
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
 
@@ -693,11 +802,7 @@ export default function CalculoPage() {
           }}
         />
         <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
-          <MenuItem
-            onClick={() => console.log("linhaSelecionada", selectedRow)}
-          >
-            Editar
-          </MenuItem>
+          <MenuItem onClick={handleCalcular}>Ver Detalhes</MenuItem>
           <MenuItem
             onClick={() => console.log("linhaSelecionada", selectedRow)}
           >
@@ -722,6 +827,22 @@ export default function CalculoPage() {
               width: 500,
             }}
           >
+            <IconButton
+              onClick={() => {
+                setOpenModalDistribuir(false);
+                setSelectionModel({
+                  type: "include",
+                  ids: new Set(),
+                });
+              }}
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
             <Paper sx={{ p: 3, borderRadius: 3 }}>
               <Typography fontWeight={600} mb={2}>
                 Distribuir Processos
@@ -731,14 +852,37 @@ export default function CalculoPage() {
                 fullWidth
                 select
                 size="small"
+                label="Equipe"
+                value={equipeSelecionada ?? ""}
+                onChange={(e) => {
+                  const id = Number(e.target.value);
+                  setEquipeSelecionada(id);
+                  buscarMembrosEquipe(id);
+                  setMembroSelecionado("");
+                }}
+                sx={{ mb: 2 }}
+              >
+                {equipes.map((eq) => (
+                  <MenuItem key={eq.id} value={eq.id}>
+                    {eq.titulo}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              {/* SELECT MEMBRO */}
+              <TextField
+                fullWidth
+                select
+                size="small"
                 label="Selecionar responsável"
-                value={pessoaSelecionada}
-                onChange={(e) => setPessoaSelecionada(Number(e.target.value))}
+                value={membroSelecionado}
+                onChange={(e) => setMembroSelecionado(Number(e.target.value))}
+                disabled={!equipeSelecionada}
                 sx={{ mb: 3 }}
               >
-                {pessoas.map((pessoa) => (
-                  <MenuItem key={pessoa.id} value={pessoa.id}>
-                    {pessoa.nome}
+                {membrosEquipe.map((membro) => (
+                  <MenuItem key={membro.id} value={membro.id}>
+                    {membro.nome}
                   </MenuItem>
                 ))}
               </TextField>
@@ -803,6 +947,20 @@ export default function CalculoPage() {
               width: 1200,
             }}
           >
+            <IconButton
+              onClick={() => setOpenModalEmpreitada(false)}
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                color: "grey.500",
+                "&:hover": {
+                  color: "grey.700",
+                },
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
             <Paper sx={{ p: 3, borderRadius: 3 }}>
               <Typography fontWeight={600} mb={2}>
                 Vincular à Empreitada
@@ -836,13 +994,19 @@ export default function CalculoPage() {
                   sx={{ bgcolor: "#5c6cff" }}
                   onClick={criarPacoteItens}
                 >
-                  Criar
+                  Salvar
                 </Button>
               </Box>
             </Paper>
           </Box>
         </Modal>
       </Box>
+      <SnackInfo
+        open={snackOpen}
+        message={snackMessage}
+        type={snackType}
+        onClose={() => setSnackOpen(false)}
+      />
     </Box>
   );
 }

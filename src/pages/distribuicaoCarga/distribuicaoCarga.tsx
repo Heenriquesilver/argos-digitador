@@ -14,6 +14,7 @@ import {
 import GraficoDistribuicao from "../../components/grafico-distribuicao-carga/graficoDistribuicao";
 import MetricCard from "../../components/MetricCard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import SnackInfo from "../../components/snack-info/SnackInfo";
 
 import { useLocation } from "react-router-dom";
 
@@ -21,7 +22,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import Grid from "@mui/material/GridLegacy";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
+// import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
 import api from "../../api/axios";
 
 import { useState, useEffect } from "react";
@@ -40,9 +41,31 @@ type Tprocesso = {
 };
 
 export default function DistribuicaoCarga() {
-  const [pessoas, setPessoas] = useState<any[]>([]);
-  const [pessoaSelecionada, setPessoaSelecionada] = useState("");
-  const { data: idEntidadeWork } = useGetEntidadeWork();
+  // const [pessoas, setPessoas] = useState<any[]>([]);
+
+  const [equipes, setEquipes] = useState<any[]>([]);
+  const [equipeSelecionada, setEquipeSelecionada] = useState<number | null>(
+    null,
+  );
+  const [membrosEquipe, setMembrosEquipe] = useState<any[]>([]);
+  const [membroSelecionado, setMembroSelecionado] = useState("");
+
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMessage, setSnackMessage] = useState("");
+  const [snackType, setSnackType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("success");
+
+  const showSnack = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "success",
+  ) => {
+    setSnackMessage(message);
+    setSnackType(type);
+    setSnackOpen(true);
+  };
+
+  // const { data: idEntidadeWork } = useGetEntidadeWork();
 
   const location = useLocation();
 
@@ -106,31 +129,66 @@ export default function DistribuicaoCarga() {
     value: membro.carga,
   }));
 
-  useEffect(() => {
-    const fetchPessoas = async () => {
-      try {
-        const entidadePai = idEntidadeWork;
+  // useEffect(() => {
+  //   const fetchPessoas = async () => {
+  //     try {
+  //       const entidadePai = idEntidadeWork;
 
-        const response = await api.get("/api/v1/pessoa_fisica", {
-          params: {
-            entidade_pai: entidadePai,
-            page: 0,
-            size: 10,
-          },
+  //       const response = await api.get("/api/v1/pessoa_fisica", {
+  //         params: {
+  //           entidade_pai: entidadePai,
+  //           page: 0,
+  //           size: 10,
+  //         },
+  //       });
+
+  //       setPessoas(response.data?.elements || []);
+  //     } catch (error) {
+  //       console.error("Erro ao buscar pessoas", error);
+  //     }
+  //   };
+
+  //   fetchPessoas();
+  // }, [idEntidadeWork]);
+
+  useEffect(() => {
+    const fetchEquipes = async () => {
+      try {
+        const response = await api.get("/api/v1/equipe", {
+          params: { page: 0, size: 100 },
         });
 
-        setPessoas(response.data?.elements || []);
+        setEquipes(response.data?.elements || []);
       } catch (error) {
-        console.error("Erro ao buscar pessoas", error);
+        console.error("Erro ao buscar equipes", error);
       }
     };
 
-    fetchPessoas();
-  }, [idEntidadeWork]);
+    fetchEquipes();
+  }, []);
+
+  const fetchMembrosEquipe = async (id: number) => {
+    try {
+      const response = await api.get(`/api/v1/membro-equipe/equipe/${id}`, {
+        params: { page: 0, size: 100 },
+      });
+
+      const data = response.data?.elements || [];
+
+      setMembrosEquipe(
+        data.map((item: any) => ({
+          id: item.membro?.id,
+          nome: item.membro?.nome,
+        })),
+      );
+    } catch (error) {
+      console.error("Erro ao buscar membros da equipe", error);
+    }
+  };
 
   const atribuirProcesso = async (proc: Tprocesso) => {
-    if (!pessoaSelecionada) {
-      alert("Selecione um responsável antes de atribuir.");
+    if (!membroSelecionado) {
+      showSnack("Selecione um responsável antes de atribuir.", "warning");
       return;
     }
 
@@ -138,7 +196,7 @@ export default function DistribuicaoCarga() {
       const payload = {
         processoJudicial: proc.id,
         status: 2,
-        responsavel: Number(pessoaSelecionada),
+        responsavel: Number(membroSelecionado),
         prioridade: 1,
         alocacao: new Date().toISOString(),
         inicio: null,
@@ -148,11 +206,11 @@ export default function DistribuicaoCarga() {
       };
 
       await api.post("/api/v1/calculo-judicial", payload);
-
+      showSnack("Processo atribuído com sucesso!", "success");
       setProcessos((prev) => prev.filter((p) => p.id !== proc.id));
     } catch (error) {
       console.error("Erro ao atribuir processo", error);
-      alert("Erro ao atribuir processo.");
+      showSnack("Erro ao atribuir processo.", "error");
     }
   };
 
@@ -165,7 +223,6 @@ export default function DistribuicaoCarga() {
         p: 3,
       }}
     >
-      {/* HEADER */}
       <Grid container alignItems="center" mb={4}>
         <Grid item xs={12} md={6}>
           <Typography variant="h5" fontWeight={600} color="text.primary">
@@ -235,13 +292,12 @@ export default function DistribuicaoCarga() {
           />
         </Grid>
       </Grid>
-      {/* CONTEÚDO PRINCIPAL */}
+
       <Grid container spacing={3} sx={{ flex: 1, minHeight: 0 }}>
-        {/* COLUNA ESQUERDA - PROCESSOS */}
         <Grid item xs={12} md={5}>
           <Paper sx={{ p: 3, borderRadius: 3, height: "100%" }}>
             <Typography fontWeight={600} mb={2} color="text.primary">
-              Equipe
+              Celula
             </Typography>
 
             {/* SEARCH */}
@@ -249,14 +305,38 @@ export default function DistribuicaoCarga() {
               fullWidth
               select
               size="small"
-              label="Selecionar responsável"
-              value={pessoaSelecionada}
-              onChange={(e) => setPessoaSelecionada(e.target.value)}
+              label="Equipe"
+              value={equipeSelecionada ?? ""}
+              onChange={(e) => {
+                const id = Number(e.target.value);
+                setEquipeSelecionada(id);
+                fetchMembrosEquipe(id);
+                setMembroSelecionado("");
+              }}
               sx={{ mb: 3 }}
             >
-              {pessoas.map((pessoa) => (
-                <MenuItem key={pessoa.id} value={pessoa.id}>
-                  {pessoa.nome}
+              {equipes.map((eq) => (
+                <MenuItem key={eq.id} value={eq.id}>
+                  {eq.titulo}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Typography fontWeight={600} mb={2} color="text.primary">
+              Membros
+            </Typography>
+            <TextField
+              fullWidth
+              select
+              size="small"
+              label="Selecionar responsável"
+              value={membroSelecionado}
+              onChange={(e) => setMembroSelecionado(e.target.value)}
+              sx={{ mb: 3 }}
+              disabled={!equipeSelecionada} // 🔥 só ativa após escolher equipe
+            >
+              {membrosEquipe.map((membro) => (
+                <MenuItem key={membro.id} value={membro.id}>
+                  {membro.nome}
                 </MenuItem>
               ))}
             </TextField>
@@ -488,6 +568,12 @@ export default function DistribuicaoCarga() {
           </Paper>
         </Grid>
       </Grid>
+      <SnackInfo
+        open={snackOpen}
+        message={snackMessage}
+        type={snackType}
+        onClose={() => setSnackOpen(false)}
+      />
     </Box>
   );
 }

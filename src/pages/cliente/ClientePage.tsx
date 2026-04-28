@@ -14,13 +14,12 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import type { GridRowSelectionModel } from "@mui/x-data-grid";
 import { Snackbar, Alert } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Checkbox, FormControlLabel } from "@mui/material";
 
 import { ptBR } from "@mui/x-data-grid/locales";
 import Grid from "@mui/material/GridLegacy";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
-import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
+// import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
 import { useState, useEffect } from "react";
 
 import api from "../../api/axios";
@@ -30,7 +29,7 @@ type TEquipe = {
   titulo: string;
 };
 
-export default function EquipePage() {
+export default function ClientePage() {
   const [rows, setRows] = useState<TEquipe[]>([]);
   const [membros, setMembros] = useState<any[]>([]);
   const [loadingMembros, setLoadingMembros] = useState(false);
@@ -42,8 +41,10 @@ export default function EquipePage() {
   const [nomeEquipeSelecionada, setNomeEquipeSelecionada] = useState("");
 
   const [termoBusca, setTermoBusca] = useState("");
-  const [pessoas, setPessoas] = useState<any[]>([]);
-  const [pessoasSelecionadas, setPessoasSelecionadas] = useState<number[]>([]);
+  const [empresas, setEmpresas] = useState<any[]>([]);
+  const [empresasSelecionadas, setEmpresasSelecionadas] = useState<number[]>(
+    [],
+  );
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [mensagemSnackbar, setMensagemSnackbar] = useState("");
@@ -56,26 +57,52 @@ export default function EquipePage() {
     null,
   );
 
-  const { data: idEntidadeWork } = useGetEntidadeWork();
+  // const { data: idEntidadeWork } = useGetEntidadeWork();
 
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
     type: "include",
     ids: new Set(),
   });
-  const [maturidades, setMaturidades] = useState<any[]>([]);
-  const [maturidadeSelecionada, setMaturidadeSelecionada] = useState<
-    number | ""
-  >("");
-
-  const [risco, setRisco] = useState(0);
-  const [execucao, setExecucao] = useState(0);
 
   // substitui maxProcessos
   const [metaDiaria, setMetaDiaria] = useState<number>(0);
-  const [metaMensal, setMetaMensal] = useState<number>(0);
+
   const [loadingBusca, setLoadingBusca] = useState(false);
 
   const navigate = useNavigate();
+
+  const buscarEmpresas = async () => {
+    if (!termoBusca.trim()) return;
+
+    try {
+      setLoadingBusca(true);
+
+      const response = await api.get("/api/v1/pessoa_juridica/nome", {
+        params: {
+          nome: termoBusca,
+          page: 0,
+          size: 10,
+        },
+      });
+
+      const data = response.data?.elements || [];
+
+      setEmpresas(
+        data.map((item: any) => ({
+          id: item.id,
+          nome: item.nomeFantasia || item.razaoSocial,
+          cnpj: item.cnpj,
+          cidade: item.cidade,
+          uf: item.uf,
+        })),
+      );
+    } catch (e) {
+      console.error("Erro ao buscar empresas");
+      setEmpresas([]);
+    } finally {
+      setLoadingBusca(false);
+    }
+  };
 
   useEffect(() => {
     const fetchEquipes = async () => {
@@ -91,6 +118,7 @@ export default function EquipePage() {
 
         const data = response.data?.elements || [];
 
+        // 🔥 Mapeia pro formato do DataGrid
         const formatted = data.map((item: any) => ({
           id: item.id,
           titulo: item.titulo,
@@ -107,32 +135,31 @@ export default function EquipePage() {
     fetchEquipes();
   }, []);
 
-  const fetchMembros = async (id: number) => {
+  const fetchClientes = async (id: number) => {
     try {
       setLoadingMembros(true);
 
-      const response = await api.get(`/api/v1/membro-equipe/equipe/${id}`, {
-        params: {
-          page: 0,
-          size: 10,
-        },
+      const response = await api.get(`/api/v1/cliente-equipe/equipe/${id}`, {
+        // params: {
+        //   page: 0,
+        //   size: 10,
+        // },
       });
 
       const data = response.data?.elements || [];
 
       const formatted = data.map((item: any) => ({
-        id: item.id,
-        nome: item.membro?.nome,
-        metaMensal: item?.metaMensal,
-        metaDiaria: item.metaDiaria,
-        maturidade: item.maturidade?.titulo,
-        maturidadeId: Number(item.maturidade?.id),
-        telefone: item.membro?.telefone,
+        id: item.id, // 👈 ID da relação cliente-equipe (ideal pra delete)
+        idReal: item.cliente?.id ?? null,
+        nome: item.cliente?.nomeFantasia,
+        cnpj: item.cliente?.cnpj,
+        cidade: item.cliente?.cidade,
+        uf: item.cliente?.uf,
       }));
 
       setMembros(formatted);
     } catch (error) {
-      console.error("Erro ao buscar membros", error);
+      console.error("Erro ao buscar clientes", error);
     } finally {
       setLoadingMembros(false);
     }
@@ -140,81 +167,43 @@ export default function EquipePage() {
 
   const deletarMembro = async (id: number) => {
     try {
-      await api.delete(`/api/v1/membro-equipe/${id}`);
+      await api.delete(`/api/v1/cliente-equipe/${id}`);
 
-      setMensagemSnackbar("Membro removido com sucesso!");
+      setMensagemSnackbar("Cliente removido da equipe com sucesso!");
       setTipoSnackbar("success");
       setOpenSnackbar(true);
 
       setMembros((prev) => prev.filter((m) => m.id !== id));
     } catch (error) {
-      console.error("Erro ao remover membro", error);
+      console.error("Erro ao remover cliente", error);
 
-      setMensagemSnackbar("Erro ao remover membro");
+      setMensagemSnackbar("Erro ao remover cliente");
       setTipoSnackbar("error");
       setOpenSnackbar(true);
-    }
-  };
-
-  const buscarPessoas = async () => {
-    try {
-      setLoadingBusca(true);
-
-      const entidade = idEntidadeWork;
-
-      const response = await api.get("/api/v1/pessoa_fisica/termo", {
-        params: {
-          entidade_pai: entidade,
-          termo: termoBusca,
-          page: 0,
-          size: 10,
-        },
-      });
-
-      const data = response.data?.elements || [];
-
-      setPessoas(
-        data.map((item: any) => ({
-          id: item.id,
-          nome: item.nome,
-        })),
-      );
-    } catch (e) {
-      console.error("Erro ao buscar pessoas");
-    } finally {
-      setLoadingBusca(false);
     }
   };
 
   const incluirMembro = async () => {
     try {
       await Promise.all(
-        pessoasSelecionadas.map((pessoaId) =>
-          api.post("/api/v1/membro-equipe", {
+        empresasSelecionadas.map((empresaId) =>
+          api.post("/api/v1/cliente-equipe", {
+            cliente: empresaId,
             equipe: equipeSelecionada,
-            membro: pessoaId,
-            maturidade: maturidadeSelecionada,
-            metaDiaria: metaDiaria,
-            metaMensal: metaMensal,
-            risco: risco,
-            execucao: execucao,
+            numr_externo: String(metaDiaria),
           }),
         ),
       );
 
-      setMensagemSnackbar("Membros incluídos com sucesso!");
+      setMensagemSnackbar("Clientes incluídos com sucesso!");
       setTipoSnackbar("success");
       setOpenSnackbar(true);
 
       setOpenModal(false);
-      setPessoasSelecionadas([]);
+      setEmpresasSelecionadas([]);
       setMetaDiaria(0);
-      setMetaMensal(0);
-      setMaturidadeSelecionada("");
-      setRisco(0);
-      setExecucao(0);
     } catch (e) {
-      setMensagemSnackbar("Erro ao incluir membros");
+      setMensagemSnackbar("Erro ao incluir clientes");
       setTipoSnackbar("error");
       setOpenSnackbar(true);
     }
@@ -246,14 +235,14 @@ export default function EquipePage() {
         <Box
           display="flex"
           gap={1}
-          justifyContent="flex-end" // 👈 alinha à direita
+          justifyContent="flex-end"
           alignItems="center"
-          width="100%" // 👈 ocupa toda a célula
+          width="100%"
         >
           <IconButton
             size="small"
             onClick={() => {
-              fetchMembros(params.row.id);
+              fetchClientes(params.row.id);
               setNomeEquipeSelecionada(params.row.titulo);
             }}
           >
@@ -279,70 +268,40 @@ export default function EquipePage() {
     },
   ];
 
-  const columnsPessoas: GridColDef[] = [
-    {
-      field: "id",
-      headerName: "ID",
-      width: 90,
-    },
-    {
-      field: "nome",
-      headerName: "Nome",
-      flex: 1,
-    },
+  const columnsEmpresas: GridColDef[] = [
+    { field: "id", headerName: "ID", width: 90 },
+    { field: "nome", headerName: "Nome", flex: 1 },
+    { field: "cnpj", headerName: "CNPJ", flex: 1 },
+    { field: "cidade", headerName: "Cidade", flex: 1 },
+    { field: "uf", headerName: "UF", width: 90 },
   ];
 
-  const columnsMembros: GridColDef[] = [
+  const columnsClientes: GridColDef[] = [
     {
-      field: "id",
+      field: "idReal",
       headerName: "ID",
-      flex: 0.2,
-      headerClassName: "cor-background-headerName",
+      flex: 0.3,
+      renderCell: (params) => params.value ?? "", // 👈 se não tiver, fica vazio
     },
-
     {
       field: "nome",
-      headerName: "Nome",
+      headerName: "Nome Fantasia",
+      flex: 1,
+    },
+    {
+      field: "cnpj",
+      headerName: "CNPJ",
       flex: 0.8,
-      headerClassName: "cor-background-headerName",
     },
     {
-      field: "metaDiaria",
-      headerName: "Meta D",
-      flex: 0.5,
-      headerClassName: "cor-background-headerName",
+      field: "cidade",
+      headerName: "Cidade",
+      flex: 0.6,
     },
     {
-      field: "metaMensal",
-      headerName: "Meta M.",
-      flex: 0.5,
-      headerClassName: "cor-background-headerName",
-    },
-    {
-      field: "maturidade",
-      headerName: "Senioridade",
-      flex: 0.8,
-      headerClassName: "cor-background-headerName",
-      renderCell: (params) => {
-        const isRoxo = Number(params.row.maturidadeId) === 5;
-
-        return (
-          <span
-            style={{
-              color: isRoxo ? "#5c6cff" : "inherit",
-              fontWeight: isRoxo ? 600 : 400,
-            }}
-          >
-            {params.value}
-          </span>
-        );
-      },
-    },
-    {
-      field: "telefone",
-      headerName: "Telefone",
-      flex: 0.8,
-      headerClassName: "cor-background-headerName",
+      field: "uf",
+      headerName: "UF",
+      flex: 0.3,
     },
     {
       field: "acoes",
@@ -350,23 +309,16 @@ export default function EquipePage() {
       sortable: false,
       filterable: false,
       flex: 0.4,
-
       align: "right",
       headerAlign: "right",
       renderCell: (params) => (
         <Box
           display="flex"
           gap={1}
-          justifyContent="flex-end" // 👈 alinha à direita
+          justifyContent="flex-end"
           alignItems="center"
-          width="100%" // 👈 ocupa toda a célula
+          width="100%"
         >
-          <IconButton
-            size="small"
-            onClick={() => navigate(`/membro-equipe/${params.row.id}/editar`)}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
           <IconButton
             size="small"
             onClick={() => {
@@ -378,35 +330,25 @@ export default function EquipePage() {
           </IconButton>
         </Box>
       ),
-      headerClassName: "cor-background-headerName",
     },
   ];
+
   const abrirModal = async () => {
     setOpenModal(true);
 
     try {
-      const [equipesRes, maturidadeRes] = await Promise.all([
-        api.get("/api/v1/equipe", { params: { page: 0, size: 100 } }),
-        api.get("/api/v1/equipe-maturidade", {
-          params: { page: 0, size: 100 },
-        }),
-      ]);
+      const response = await api.get("/api/v1/equipe", {
+        params: { page: 0, size: 100 },
+      });
 
       setEquipesSelect(
-        equipesRes.data?.elements.map((item: any) => ({
-          id: item.id,
-          titulo: item.titulo,
-        })),
-      );
-
-      setMaturidades(
-        maturidadeRes.data?.elements.map((item: any) => ({
+        response.data?.elements.map((item: any) => ({
           id: item.id,
           titulo: item.titulo,
         })),
       );
     } catch (e) {
-      console.error("Erro ao carregar dados");
+      console.error("Erro ao carregar equipes");
     }
   };
 
@@ -425,28 +367,27 @@ export default function EquipePage() {
       <Grid container alignItems="center" mb={4}>
         <Grid item xs={12} md={6}>
           <Typography variant="h5" fontWeight={600} color="text.primary">
-            Equipe
+            Clientes Por Equipe
           </Typography>
-          <Typography color="text.secondary">Gernciamento de Equipe</Typography>
+          <Typography color="text.secondary">
+            Gernciamento de Clientes
+          </Typography>
         </Grid>
         <Grid container spacing={2}>
           {/* ESQUERDA - EQUIPES */}
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={4} mt={2.5}>
             <Box
               mb={2}
               sx={{
                 display: "flex",
-                justifyContent: "flex-end",
+                justifyContent: "flex-start",
                 alignItems: "center",
               }}
             >
-              <Button
-                variant="contained"
-                sx={{ bgcolor: "#5c6cff", px: 4, height: "50px" }}
-                onClick={() => navigate("/equipe/nova")}
-              >
-                Adicionar Equipe
-              </Button>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}></Box>
+              <Typography variant="body2" color="text.primary" fontSize={20}>
+                Equipe
+              </Typography>
             </Box>
             <DataGrid
               rows={rows}
@@ -475,11 +416,21 @@ export default function EquipePage() {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography variant="body2" color="text.primary" fontSize={20}>
-                  Membros:
+                <Typography
+                  variant="body2"
+                  color="text.primary"
+                  fontSize={20}
+                  mt={2.5}
+                >
+                  Clientes:
                 </Typography>
 
-                <Typography variant="h5" fontWeight={600} color="text.primary">
+                <Typography
+                  variant="h5"
+                  fontWeight={600}
+                  color="text.primary"
+                  mt={2}
+                >
                   {nomeEquipeSelecionada}
                 </Typography>
               </Box>
@@ -488,26 +439,26 @@ export default function EquipePage() {
                 sx={{ bgcolor: "#5c6cff", px: 4, height: "50px" }}
                 onClick={abrirModal}
               >
-                Adicionar Membro
+                Adicionar Cliente
               </Button>
             </Box>
             <DataGrid
               rows={membros}
-              columns={columnsMembros}
+              columns={columnsClientes}
               loading={loadingMembros}
               autoHeight
               disableRowSelectionOnClick
               localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
               pageSizeOptions={[10]}
-              getRowClassName={(params) =>
-                Number(params.row.maturidadeId) === 5 ? "linha-roxa" : ""
-              }
-              sx={{
-                "& .linha-roxa": {
-                  color: "#5c6cff",
-                  fontWeight: 600,
-                },
-              }}
+              // getRowClassName={(params) =>
+              //   Number(params.row.maturidadeId) === 5 ? "linha-roxa" : ""
+              // }
+              // sx={{
+              //   "& .linha-roxa": {
+              //     color: "#5c6cff",
+              //     fontWeight: 600,
+              //   },
+              // }}
             />
           </Grid>
         </Grid>
@@ -518,12 +469,12 @@ export default function EquipePage() {
       <Modal
         open={openModal}
         onClose={() => {
-          setOpenModal(false);
+          setOpenConfirm(false);
           setSelectionModel({
             type: "include",
             ids: new Set(),
           });
-          setPessoasSelecionadas([]);
+          setEmpresasSelecionadas([]);
         }}
       >
         <Box
@@ -580,23 +531,24 @@ export default function EquipePage() {
           <Box display="flex" gap={1} mb={2}>
             <TextField
               fullWidth
-              label="Buscar pessoa"
+              label="Buscar Empresa"
               value={termoBusca}
               onChange={(e) => setTermoBusca(e.target.value)}
             />
             <Button
               variant="contained"
-              onClick={buscarPessoas}
+              onClick={buscarEmpresas}
               sx={{ bgcolor: "#5c6cff" }}
             >
               Buscar
             </Button>
           </Box>
 
+          {/* LISTA DE PESSOAS */}
           <Box sx={{ height: 250, mb: 2 }}>
             <DataGrid
-              rows={pessoas}
-              columns={columnsPessoas}
+              rows={empresas}
+              columns={columnsEmpresas}
               loading={loadingBusca}
               pageSizeOptions={[5]}
               checkboxSelection
@@ -607,7 +559,7 @@ export default function EquipePage() {
                 setSelectionModel(newSelection);
 
                 const selectedIds = Array.from(newSelection.ids).map(Number);
-                setPessoasSelecionadas(selectedIds);
+                setEmpresasSelecionadas(selectedIds);
               }}
               sx={{
                 "& .MuiDataGrid-row.Mui-selected": {
@@ -620,26 +572,8 @@ export default function EquipePage() {
           {/* INPUT MAX PROCESSOS */}
           <Box display="flex" flexDirection={"column"} gap={1}>
             <Box display="flex" gap={2} mb={2}>
-              {/* MATURIDADE */}
               <TextField
-                select
-                fullWidth
-                label="Senioridade"
-                value={maturidadeSelecionada}
-                onChange={(e) =>
-                  setMaturidadeSelecionada(Number(e.target.value))
-                }
-              >
-                {maturidades.map((m) => (
-                  <MenuItem key={m.id} value={m.id}>
-                    {m.titulo}
-                  </MenuItem>
-                ))}
-              </TextField>
-
-              {/* META DIÁRIA */}
-              <TextField
-                label="Meta Diaria"
+                label="Id Externo "
                 value={metaDiaria}
                 onChange={(e) => {
                   const value = Number(e.target.value);
@@ -657,59 +591,14 @@ export default function EquipePage() {
                 // inputProps={{ min: 1 }}
                 sx={{ width: "150px" }}
               />
-
-              {/* META MENSAL */}
-              <TextField
-                label="Meta Mensal"
-                value={metaMensal}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-
-                  setMetaMensal(value);
-
-                  // if (!value || value <= 0) {
-                  //   setErroMaxProcessos("O valor deve ser maior que 0");
-                  // } else {
-                  //   setErroMaxProcessos("");
-                  // }
-                }}
-                // error={!!erroMaxProcessos}
-                // helperText={erroMaxProcessos}
-                // inputProps={{ min: 1 }}
-                sx={{ width: "150px" }}
-              />
             </Box>
-            <Box display="flex" gap={4} mb={2}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={risco === 1}
-                    onChange={(e) => setRisco(e.target.checked ? 1 : 0)}
-                  />
-                }
-                sx={{ color: "black" }}
-                label="Risco"
-              />
 
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={execucao === 1}
-                    onChange={(e) => setExecucao(e.target.checked ? 1 : 0)}
-                  />
-                }
-                label="Execução"
-                sx={{ color: "black" }}
-              />
-            </Box>
             <Box display="flex" justifyContent="flex-end">
               <Button
                 variant="contained"
                 onClick={incluirMembro}
                 disabled={
-                  pessoasSelecionadas.length === 0 ||
-                  !equipeSelecionada ||
-                  !maturidadeSelecionada
+                  empresasSelecionadas.length === 0 || !equipeSelecionada
                 }
                 sx={{ bgcolor: "#5c6cff", width: "150px" }}
               >
@@ -719,7 +608,17 @@ export default function EquipePage() {
           </Box>
         </Box>
       </Modal>
-      <Modal open={openConfirm} onClose={() => setOpenConfirm(false)}>
+      <Modal
+        open={openConfirm}
+        onClose={() => {
+          setOpenModal(false);
+          setSelectionModel({
+            type: "include",
+            ids: new Set(),
+          });
+          setEmpresasSelecionadas([]);
+        }}
+      >
         <Box
           sx={{
             position: "absolute",

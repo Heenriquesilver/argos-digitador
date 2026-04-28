@@ -4,17 +4,14 @@ import {
   Button,
   IconButton,
   TextField,
-  Modal,
   MenuItem,
+  Collapse,
 } from "@mui/material";
-
-import GroupIcon from "@mui/icons-material/Group";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import type { GridRowSelectionModel } from "@mui/x-data-grid";
-import { Snackbar, Alert } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Collapse } from "@mui/material";
+
+import EditIcon from "@mui/icons-material/Edit";
 
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -23,62 +20,85 @@ import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 
 import { ptBR } from "@mui/x-data-grid/locales";
-import Grid from "@mui/material/GridLegacy";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+
+import Grid from "@mui/material/GridLegacy";
 import { useNavigate } from "react-router-dom";
-import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Modal, Paper } from "@mui/material";
 
 import api from "../../api/axios";
+import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
 
-type TEquipe = {
+type RowType = {
+  id: number | string;
+  titulo?: string;
+  isDetail?: boolean;
+  parentId?: number;
+};
+
+type StatusOption = {
   id: number;
   titulo: string;
+  backcolor: string;
 };
 
 export default function EmpreitadasPage() {
-  const [rows, setRows] = useState<TEquipe[]>([]);
-  const [membros, setMembros] = useState<any[]>([]);
-  const [loadingMembros, setLoadingMembros] = useState(false);
+  const [rows, setRows] = useState<RowType[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [openModal, setOpenModal] = useState(false);
-  const [equipesSelect] = useState<TEquipe[]>([]);
-  const [equipeSelecionada, setEquipeSelecionada] = useState<number | "">("");
-  const [nomeEquipeSelecionada, setNomeEquipeSelecionada] = useState("");
-  const [erroMaxProcessos, setErroMaxProcessos] = useState("");
-
-  const [termoBusca, setTermoBusca] = useState("");
-  const [pessoas, setPessoas] = useState<any[]>([]);
-  const [pessoasSelecionadas, setPessoasSelecionadas] = useState<number[]>([]);
-
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [mensagemSnackbar, setMensagemSnackbar] = useState("");
-  const [tipoSnackbar, setTipoSnackbar] = useState<"success" | "error">(
-    "success",
-  );
+  const [selectedRow, setSelectedRow] = useState<any>(null);
+  const [detalhesSelecionados, setDetalhesSelecionados] = useState<any[]>([]);
 
   const [openFilter, setOpenFilter] = useState(false);
+
+  const hoje = new Date();
+  const maisDoisDias = new Date();
+  maisDoisDias.setDate(hoje.getDate() + 2);
 
   const [filtros, setFiltros] = useState({
     titulo: "",
     status: "",
-    periodoInicio: "",
-    periodoFim: "",
+    periodoInicio: formatDate(hoje),
+    periodoFim: formatDate(maisDoisDias),
   });
+
+  const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
+
+  const [detalhesMap, setDetalhesMap] = useState<Record<number, any[]>>({});
+  const [loadingDetalhes, setLoadingDetalhes] = useState(false);
 
   const { data: idEntidadeWork } = useGetEntidadeWork();
+  // const responsavel = localStorage.getItem("idPessoaFisicaLogada");
 
-  const responsavel = localStorage.getItem("idEntidadeUsuarioLogado");
-
-  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
-    type: "include",
-    ids: new Set(),
-  });
-  const [maxProcessos, setMaxProcessos] = useState<number>(0);
-  const [loadingBusca, setLoadingBusca] = useState(false);
+  function formatDate(date: Date) {
+    return date.toISOString().split("T")[0];
+  }
 
   const navigate = useNavigate();
+
+  async function buscarStatus() {
+    try {
+      const res = await api.get("/api/v1/status-calculo", {
+        params: { page: 0, size: 20 },
+      });
+
+      setStatusOptions(res.data.elements);
+    } catch (error) {
+      console.error("Erro ao buscar status", error);
+    }
+  }
+
+  useEffect(() => {
+    buscarStatus();
+  }, []);
+
+  function formatarData(data: string) {
+    if (!data) return "-";
+
+    return dayjs(data).format("DD/MM/YYYY");
+  }
 
   async function buscarEmpreitadas() {
     try {
@@ -89,7 +109,7 @@ export default function EmpreitadasPage() {
       const payload = {
         titulo: filtros.titulo || "",
         numeroProcesso: "",
-        responsavel: responsavel,
+        responsavel: 0,
         status: filtros.status ? Number(filtros.status) : 0,
         dataInicio: filtros.periodoInicio || null,
         dataTermino: filtros.periodoFim || null,
@@ -98,14 +118,18 @@ export default function EmpreitadasPage() {
       const res = await api.post(
         `/api/v1/pacote-calculo/filtro/${idEntidadeWork}`,
         payload,
-        {
-          params: { page: 0, size: 10 },
-        },
+        { params: { page: 0, size: 10 } },
       );
 
       const formatted = res.data?.elements.map((item: any) => ({
         id: item.id,
         titulo: item.titulo,
+        responsavel: item.responsavel.nome,
+        status: item.status.titulo,
+        valor: item.valor,
+        valorAp: item.valorAP,
+        qtdeAP: item.qtdeAP,
+        prazo: formatarData(item.prazo),
       }));
 
       setRows(formatted || []);
@@ -116,177 +140,111 @@ export default function EmpreitadasPage() {
     }
   }
 
-  // useEffect(() => {
-  //   const fetchEquipes = async () => {
-  //     try {
-  //       setLoading(true);
-
-  //       const response = await api.get("/api/v1/equipe", {
-  //         params: {
-  //           page: 0,
-  //           size: 10,
-  //         },
-  //       });
-
-  //       const data = response.data?.elements || [];
-
-  //       // 🔥 Mapeia pro formato do DataGrid
-  //       const formatted = data.map((item: any) => ({
-  //         id: item.id,
-  //         titulo: item.titulo,
-  //       }));
-
-  //       setRows(formatted);
-  //     } catch (error) {
-  //       console.error("Erro ao buscar equipes", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchEquipes();
-  // }, []);
-
-  // const fetchMembros = async (id: number) => {
-  //   try {
-  //     setLoadingMembros(true);
-
-  //     const response = await api.get(`/api/v1/membro-equipe/equipe/${id}`, {
-  //       params: {
-  //         page: 1,
-  //         size: 10,
-  //       },
-  //     });
-
-  //     const data = response.data?.elements || [];
-
-  //     const formatted = data.map((item: any) => ({
-  //       id: item.id,
-  //       nome: item.membro?.nome,
-  //       cpf: item.membro?.cpf,
-  //       telefone: item.membro?.telefone,
-  //       maxProcessosAlocados: item.maxProcessosAlocados,
-  //     }));
-
-  //     setMembros(formatted);
-  //   } catch (error) {
-  //     console.error("Erro ao buscar membros", error);
-  //   } finally {
-  //     setLoadingMembros(false);
-  //   }
-  // };
-  async function fetchCalculosPacote(id: number) {
+  async function fetchDetalhes(id: number) {
     try {
-      setLoadingMembros(true);
+      setLoadingDetalhes(true);
 
-      const response = await api.get(`/api/v1/pacote-calculo-item/${id}`);
+      const response = await api.get(
+        `/api/v1/pacote-calculo-item/pacote/${id}`,
+      );
 
-      console.log("RESPOSTA:", response.data);
+      const lista =
+        response.data?.elements ||
+        (Array.isArray(response.data) ? response.data : [response.data]);
 
-      const item = response.data;
-
-      const formatted = [
-        {
-          id:
-            item.calculoJudicial.id ??
-            item.calculoJudicial?.id ??
-            `${Date.now()}-${Math.random()}`,
-          numeroProcesso:
-            item.calculoJudicial.processoJudicial?.numeroProcesso ||
-            "Sem descrição",
-          cliente:
-            item.calculoJudicial?.processoJudicial.cliente.nomeFantasia || 0,
-          prazo: item.calculoJudicial?.prazo || "-",
-        },
-      ];
-
-      setMembros(formatted);
+      return lista.map((item: any, index: number) => ({
+        id: item?.calculoJudicial?.id ?? index,
+        numeroProcesso:
+          item?.calculoJudicial?.processoJudicial?.numeroProcesso ||
+          "Sem número",
+        cliente:
+          item?.calculoJudicial?.processoJudicial?.cliente?.nomeFantasia ||
+          "Sem cliente",
+        prazo: formatarData(item?.calculoJudicial?.prazo) || "-",
+        numeroExterno: item?.processoJudicial?.numrExterno || "-",
+        status: item?.calculoJudicial?.status.titulo || "-",
+      }));
     } catch (error) {
-      console.error("Erro ao buscar cálculos do pacote", error);
+      console.error("Erro ao buscar detalhes", error);
+      return [];
     } finally {
-      setLoadingMembros(false);
+      setLoadingDetalhes(false);
     }
   }
 
-  // const deletarMembro = async (id: number) => {
-  //   try {
-  //     await api.delete(`/api/v1/membro-equipe/${id}`);
+  // async function toggleExpand(rowId: number) {
+  //   const alreadyExpanded = rows.some(
+  //     (r) => r.isDetail && r.parentId === rowId,
+  //   );
 
-  //     setMensagemSnackbar("Membro removido com sucesso!");
-  //     setTipoSnackbar("success");
-  //     setOpenSnackbar(true);
-
-  //     setMembros((prev) => prev.filter((m) => m.id !== id));
-  //   } catch (error) {
-  //     console.error("Erro ao remover membro", error);
-
-  //     setMensagemSnackbar("Erro ao remover membro");
-  //     setTipoSnackbar("error");
-  //     setOpenSnackbar(true);
+  //   if (alreadyExpanded) {
+  //     setRows((prev) => prev.filter((r) => r.parentId !== rowId));
+  //     return;
   //   }
-  // };
 
-  const buscarPessoas = async () => {
-    try {
-      setLoadingBusca(true);
+  //   let detalhesData = detalhesMap[rowId];
 
-      const entidade = idEntidadeWork;
+  //   if (!detalhesData) {
+  //     detalhesData = await fetchDetalhes(rowId);
 
-      const response = await api.get("/api/v1/pessoa_fisica/termo", {
-        params: {
-          entidade_pai: entidade,
-          termo: termoBusca,
-          page: 0,
-          size: 10,
-        },
-      });
+  //     setDetalhesMap((prev) => ({
+  //       ...prev,
+  //       [rowId]: detalhesData,
+  //     }));
+  //   }
 
-      const data = response.data?.elements || [];
+  //   setRows((prev) => {
+  //     const index = prev.findIndex((r) => r.id === rowId);
 
-      setPessoas(
-        data.map((item: any) => ({
-          id: item.id,
-          nome: item.nome,
-        })),
-      );
-    } catch (e) {
-      console.error("Erro ao buscar pessoas");
-    } finally {
-      setLoadingBusca(false);
-    }
-  };
+  //     const newRows = [...prev];
 
-  const incluirMembro = async () => {
-    if (!maxProcessos || maxProcessos <= 0) {
-      setErroMaxProcessos("O valor deve ser maior que 0");
-      return;
-    }
+  //     newRows.splice(index + 1, 0, {
+  //       id: `Calculo-${rowId}`,
+  //       isDetail: true,
+  //       parentId: rowId,
+  //     });
 
-    try {
-      await Promise.all(
-        pessoasSelecionadas.map((pessoaId) =>
-          api.post("/api/v1/membro-equipe", {
-            equipe: equipeSelecionada,
-            membro: pessoaId,
-            maxProcessosAlocados: maxProcessos,
-          }),
-        ),
-      );
-
-      setMensagemSnackbar("Membros incluídos com sucesso!");
-      setTipoSnackbar("success");
-      setOpenSnackbar(true);
-
-      setOpenModal(false);
-      setPessoasSelecionadas([]);
-      setMaxProcessos(0);
-      setTermoBusca("");
-    } catch (e) {
-      setMensagemSnackbar("Erro ao incluir membros");
-      setTipoSnackbar("error");
-      setOpenSnackbar(true);
-    }
-  };
+  //     return newRows;
+  //   });
+  // }
+  const columnsDetalhes: GridColDef[] = [
+    {
+      field: "id",
+      headerName: "ID",
+      width: 90,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "numeroProcesso",
+      headerName: "Processo",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "cliente",
+      headerName: "Cliente",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "numeroExterno",
+      headerName: "Numr Ext",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "prazo",
+      headerName: "Prazo",
+      width: 120,
+      headerClassName: "cor-background-headerName",
+    },
+  ];
 
   const columns: GridColDef[] = [
     {
@@ -296,467 +254,345 @@ export default function EmpreitadasPage() {
       headerClassName: "cor-background-headerName",
     },
     {
+      field: "responsavel",
+      headerName: "Responsavel",
+      width: 200,
+      headerClassName: "cor-background-headerName",
+    },
+    {
       field: "titulo",
       headerName: "Título",
-      width: 300,
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+
+      renderCell: (params) => {
+        if (params.row.isDetail) {
+          const data = detalhesMap[params.row.parentId] || [];
+
+          return (
+            <Box p={2}>
+              <DataGrid
+                rows={data}
+                columns={columnsDetalhes}
+                autoHeight
+                hideFooter
+                loading={loadingDetalhes}
+                sx={{
+                  "& .MuiDataGrid-columnHeaderTitle": {
+                    fontWeight: "bold",
+                  },
+                  "& .cor-background-headerName": {
+                    backgroundColor: "#E0E7FF",
+                  },
+                }}
+              />
+            </Box>
+          );
+        }
+
+        return params.value;
+      },
+    },
+    {
+      field: "valor",
+      headerName: "Valor Unit",
+      width: 90,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "valorAp",
+      headerName: "Valor AP",
+      width: 90,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "qtdeAP",
+      headerName: "Qtde AP",
+      width: 90,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 200,
+      headerClassName: "cor-background-headerName",
+      renderCell: (params) => {
+        const status = statusOptions.find((s) => s.titulo === params.value);
+
+        return (
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box
+              sx={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                backgroundColor: status?.backcolor || "#ccc",
+              }}
+            />
+            {params.value}
+          </Box>
+        );
+      },
+    },
+    {
+      field: "prazo",
+      headerName: "Prazo",
+      width: 120,
       headerClassName: "cor-background-headerName",
     },
     {
       field: "acoes",
       headerName: "Ações",
-      sortable: false,
-      filterable: false,
-      flex: 1,
-      minWidth: 200,
-      align: "right",
-      headerAlign: "right",
-      renderCell: (params) => (
-        <Box
-          display="flex"
-          gap={1}
-          justifyContent="flex-end"
-          alignItems="center"
-          width="100%"
-        >
-          <IconButton
-            size="small"
-            onClick={() => {
-              fetchCalculosPacote(params.row.id);
-              setNomeEquipeSelecionada(params.row.titulo);
-            }}
-          >
-            <GroupIcon fontSize="small" />
-          </IconButton>
-
-          <IconButton
-            size="small"
-            onClick={() => navigate(`/equipe/${params.row.id}/editar`)}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-
-          <IconButton
-            size="small"
-            onClick={() => console.log("Remover:", params.row)}
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      ),
       headerClassName: "cor-background-headerName",
-    },
-  ];
+      width: 150,
+      renderCell: (params) => {
+        if (params.row.isDetail) return null;
 
-  const columnsPessoas: GridColDef[] = [
-    {
-      field: "id",
-      headerName: "ID",
-      width: 90,
-    },
-    {
-      field: "nome",
-      headerName: "Nome",
-      flex: 1,
-    },
-  ];
+        return (
+          <Box display="flex" gap={1}>
+            <Tooltip title="Ver detalhes" arrow>
+              <IconButton
+                onClick={async () => {
+                  setSelectedRow(params.row);
+                  setOpenModal(true);
 
-  const columnsMembros: GridColDef[] = [
-    {
-      field: "id",
-      headerName: "ID",
-      flex: 0.3,
-    },
-    {
-      field: "numeroProcesso",
-      headerName: "Número do Processo",
-      flex: 0.8,
-    },
-    {
-      field: "cliente",
-      headerName: "Cliente",
-      flex: 1,
-    },
-    {
-      field: "prazo",
-      headerName: "Prazo",
-      flex: 0.5,
-    },
-  ];
-  // const abrirModal = async () => {
-  //   setOpenModal(true);
+                  let detalhesData = detalhesMap[params.row.id];
 
-  //   try {
-  //     const response = await api.get("/api/v1/equipe", {
-  //       params: { page: 0, size: 100 },
-  //     });
+                  if (!detalhesData) {
+                    detalhesData = await fetchDetalhes(params.row.id);
 
-  //     const data = response.data?.elements || [];
+                    setDetalhesMap((prev) => ({
+                      ...prev,
+                      [params.row.id]: detalhesData,
+                    }));
+                  }
 
-  //     setEquipesSelect(
-  //       data.map((item: any) => ({
-  //         id: item.id,
-  //         titulo: item.titulo,
-  //       })),
-  //     );
-  //   } catch (e) {
-  //     console.error("Erro ao carregar equipes");
-  //   }
-  // };
-
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100%",
-        width: "100%",
-        p: 4,
-        boxSizing: "border-box",
-      }}
-    >
-      {/* HEADER */}
-      <Grid container alignItems="center" mb={4}>
-        <Grid item xs={12} md={6}>
-          <Typography variant="h5" fontWeight={600} color="text.primary">
-            Empreitada
-          </Typography>
-          <Typography color="text.secondary">
-            Gernciamento de Pacotes de trabalho
-          </Typography>
-        </Grid>
-        <Grid container spacing={2}>
-          {/* ESQUERDA - EQUIPES */}
-          <Grid item xs={12} md={6}>
-            <Box
-              mb={2}
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                gap: "4px",
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{ bgcolor: "#5c6cff", px: 4, height: "50px" }}
-                onClick={() => setOpenFilter(!openFilter)}
-              >
-                Filtrar
-              </Button>
-              <Button
-                variant="contained"
-                sx={{ bgcolor: "#5c6cff", px: 4, height: "50px" }}
-                onClick={() => navigate("/novo-pacote")}
-              >
-                Criar Pacote
-              </Button>
-            </Box>
-            <Collapse in={openFilter}>
-              <Box
-                sx={{
-                  p: 3,
-                  mb: 2,
-                  borderRadius: 2,
-                  backgroundColor: "#F9FAFB",
-                  border: "1px solid #E5E7EB",
+                  setDetalhesSelecionados(detalhesData);
                 }}
               >
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Título"
-                      value={filtros.titulo}
-                      onChange={(e) =>
-                        setFiltros({ ...filtros, titulo: e.target.value })
-                      }
-                    />
-                  </Grid>
+                {rows.some((r) => r.parentId === params.row.id) ? (
+                  <VisibilityIcon sx={{ color: "#5c6cff" }} />
+                ) : (
+                  <VisibilityIcon />
+                )}
+              </IconButton>
+            </Tooltip>
 
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Status"
-                      value={filtros.status}
-                      onChange={(e) =>
-                        setFiltros({ ...filtros, status: e.target.value })
-                      }
-                    >
-                      <MenuItem value={1}>Ativo</MenuItem>
-                      <MenuItem value={2}>Inativo</MenuItem>
-                    </TextField>
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <LocalizationProvider
-                      dateAdapter={AdapterDayjs}
-                      adapterLocale="pt-br"
-                    >
-                      <DatePicker
-                        label="Período Início"
-                        value={
-                          filtros.periodoInicio
-                            ? dayjs(filtros.periodoInicio)
-                            : null
-                        }
-                        onChange={(newValue) =>
-                          setFiltros({
-                            ...filtros,
-                            periodoInicio: newValue
-                              ? newValue.format("YYYY-MM-DD")
-                              : "",
-                          })
-                        }
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                          },
-                        }}
-                      />
-                    </LocalizationProvider>
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <LocalizationProvider
-                      dateAdapter={AdapterDayjs}
-                      adapterLocale="pt-br"
-                    >
-                      <DatePicker
-                        label="Período Fim"
-                        value={
-                          filtros.periodoFim ? dayjs(filtros.periodoFim) : null
-                        }
-                        onChange={(newValue) =>
-                          setFiltros({
-                            ...filtros,
-                            periodoFim: newValue
-                              ? newValue.format("YYYY-MM-DD")
-                              : "",
-                          })
-                        }
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                          },
-                        }}
-                      />
-                    </LocalizationProvider>
-                  </Grid>
-
-                  <Grid item xs={12} display="flex" justifyContent="flex-end">
-                    <Button
-                      variant="contained"
-                      sx={{ bgcolor: "#5c6cff" }}
-                      onClick={buscarEmpreitadas}
-                      disabled={loading}
-                    >
-                      {loading ? "Buscando..." : "Aplicar"}
-                    </Button>
-                  </Grid>
-                </Grid>
-              </Box>
-            </Collapse>
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              loading={loading}
-              autoHeight
-              disableRowSelectionOnClick
-              localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
-              pageSizeOptions={[10]}
-            />
-          </Grid>
-
-          {/* DIREITA - MEMBROS */}
-          <Grid item xs={12} md={6}>
-            <Box
-              mb={2}
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
+            <IconButton
+              onClick={() => navigate(`/equipe/${params.row.id}/editar`)}
             >
-              <Typography variant="h5" mb={2} color="text.primary">
-                Calculos do Pacote {nomeEquipeSelecionada}
-              </Typography>
-              {/* <Button
-                variant="contained"
-                sx={{ bgcolor: "#5c6cff", px: 4, height: "50px" }}
-                onClick={abrirModal}
-              >
-                Adicionar Membro
-              </Button> */}
-            </Box>
-            <DataGrid
-              rows={membros}
-              columns={columnsMembros}
-              loading={loadingMembros}
-              autoHeight
-              disableRowSelectionOnClick
-              localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
-              pageSizeOptions={[10]}
-            />
-          </Grid>
-        </Grid>
+              <EditIcon />
+            </IconButton>
+          </Box>
+        );
+      },
+    },
+  ];
+
+  return (
+    <Box p={4}>
+      <Grid item xs={12} md={6}>
+        <Typography variant="h5" fontWeight={600} color="text.primary">
+          Empreitadas
+        </Typography>
+        <Typography color="text.secondary">
+          Gerenciamento de empreitadas.
+        </Typography>
       </Grid>
 
-      {/* TABELA */}
+      <Box display="flex" justifyContent="flex-end" gap={1} mb={2}>
+        <Button
+          onClick={() => setOpenFilter(!openFilter)}
+          variant="contained"
+          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+        >
+          Filtrar
+        </Button>
 
-      <Modal
-        open={openModal}
-        onClose={() => {
-          setOpenModal(false);
-          setSelectionModel({
-            type: "include",
-            ids: new Set(),
-          });
-          setPessoasSelecionadas([]);
-        }}
-      >
+        <Button
+          variant="contained"
+          onClick={() => navigate("/novo-pacote")}
+          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+        >
+          Criar Pacote
+        </Button>
+      </Box>
+
+      <Collapse in={openFilter}>
         <Box
           sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 600,
-            bgcolor: "#fff",
-            p: 4,
+            p: 3,
+            mb: 3,
             borderRadius: 2,
+            backgroundColor: "#F9FAFB",
+            border: "1px solid #E5E7EB",
           }}
         >
-          {/* BOTÃO FECHAR */}
-          <IconButton
-            onClick={() => {
-              setOpenModal(false);
-              setSelectionModel({
-                type: "include",
-                ids: new Set(),
-              });
-            }}
+          <Grid container spacing={2}>
+            {/* TÍTULO */}
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Título"
+                value={filtros.titulo}
+                onChange={(e) =>
+                  setFiltros({ ...filtros, titulo: e.target.value })
+                }
+              />
+            </Grid>
+
+            {/* STATUS */}
+            <Grid item xs={12} md={2}>
+              <TextField
+                select
+                fullWidth
+                label="Status"
+                value={filtros.status}
+                onChange={(e) =>
+                  setFiltros({ ...filtros, status: e.target.value })
+                }
+              >
+                {statusOptions.map((status) => (
+                  <MenuItem key={status.id} value={status.id}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Box
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: "50%",
+                          backgroundColor: status.backcolor,
+                        }}
+                      />
+                      {status.titulo}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+
+            {/* DATA INÍCIO */}
+            <Grid item xs={12} md={3}>
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="pt-br"
+              >
+                <DatePicker
+                  label="Início"
+                  value={
+                    filtros.periodoInicio ? dayjs(filtros.periodoInicio) : null
+                  }
+                  onChange={(v) =>
+                    setFiltros({
+                      ...filtros,
+                      periodoInicio: v ? v.format("YYYY-MM-DD") : "",
+                    })
+                  }
+                  slotProps={{ textField: { fullWidth: true } }}
+                />
+              </LocalizationProvider>
+            </Grid>
+
+            {/* DATA FIM */}
+            <Grid item xs={12} md={3}>
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="pt-br"
+              >
+                <DatePicker
+                  label="Término"
+                  value={filtros.periodoFim ? dayjs(filtros.periodoFim) : null}
+                  onChange={(v) =>
+                    setFiltros({
+                      ...filtros,
+                      periodoFim: v ? v.format("YYYY-MM-DD") : "",
+                    })
+                  }
+                  slotProps={{ textField: { fullWidth: true } }}
+                />
+              </LocalizationProvider>
+            </Grid>
+
+            {/* BOTÃO */}
+            <Grid item xs={12} display="flex" justifyContent="flex-end">
+              <Button
+                onClick={buscarEmpreitadas}
+                variant="contained"
+                sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+              >
+                Buscar
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      </Collapse>
+
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        autoHeight
+        loading={loading}
+        getRowHeight={(params) => (params.model.isDetail ? "auto" : null)}
+        localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
+        sx={{
+          "& .MuiDataGrid-columnHeaderTitle": {
+            fontWeight: "bold",
+          },
+          "& .cor-background-headerName": {
+            backgroundColor: "#E0E7FF",
+          },
+          "& .MuiDataGrid-columnHeaderCheckbox": {
+            backgroundColor: "#E0E7FF",
+          },
+        }}
+        disableRowSelectionOnClick
+      />
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="100vh"
+        >
+          <Paper
             sx={{
-              position: "absolute",
-              top: 8,
-              right: 8,
+              width: "80%",
+              maxHeight: "80vh",
+              p: 3,
+              borderRadius: 2,
+              overflow: "auto",
             }}
           >
-            <CloseIcon />
-          </IconButton>
+            {/* HEADER */}
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography variant="h6" fontWeight={600}>
+                {selectedRow?.titulo}
+              </Typography>
 
-          <Typography variant="h6" mb={2}>
-            Adicionar Membro
-          </Typography>
+              <IconButton onClick={() => setOpenModal(false)}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
 
-          {/* SELECT EQUIPE */}
-          <TextField
-            select
-            fullWidth
-            label="Equipe"
-            value={equipeSelecionada}
-            onChange={(e) => setEquipeSelecionada(Number(e.target.value))}
-            sx={{ mb: 2 }}
-          >
-            {equipesSelect.map((eq) => (
-              <MenuItem key={eq.id} value={eq.id}>
-                {eq.titulo}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          {/* BUSCA */}
-          <Box display="flex" gap={1} mb={2}>
-            <TextField
-              fullWidth
-              label="Buscar pessoa"
-              value={termoBusca}
-              onChange={(e) => setTermoBusca(e.target.value)}
-            />
-            <Button variant="contained" onClick={buscarPessoas}>
-              Buscar
-            </Button>
-          </Box>
-
-          {/* LISTA DE PESSOAS */}
-          <Box sx={{ height: 250, mb: 2 }}>
+            {/* GRID FILHO */}
             <DataGrid
-              rows={pessoas}
-              columns={columnsPessoas}
-              loading={loadingBusca}
-              pageSizeOptions={[5]}
-              checkboxSelection
-              disableRowSelectionOnClick={false}
+              rows={detalhesSelecionados}
+              columns={columnsDetalhes}
+              autoHeight
+              loading={loadingDetalhes}
               localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
-              rowSelectionModel={selectionModel}
-              onRowSelectionModelChange={(newSelection) => {
-                setSelectionModel(newSelection);
-
-                const selectedIds = Array.from(newSelection.ids).map(Number);
-                setPessoasSelecionadas(selectedIds);
-              }}
+              hideFooter
               sx={{
-                "& .MuiDataGrid-row.Mui-selected": {
-                  backgroundColor: "#e3f2fd !important",
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  fontWeight: "bold",
+                },
+                "& .cor-background-headerName": {
+                  backgroundColor: "#E0E7FF",
                 },
               }}
             />
-          </Box>
-
-          {/* INPUT MAX PROCESSOS */}
-          <Box display="flex" flexDirection={"column"} gap={1}>
-            <TextField
-              label="Máx. Processos"
-              value={maxProcessos}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-
-                setMaxProcessos(value);
-
-                if (!value || value <= 0) {
-                  setErroMaxProcessos("O valor deve ser maior que 0");
-                } else {
-                  setErroMaxProcessos("");
-                }
-              }}
-              error={!!erroMaxProcessos}
-              helperText={erroMaxProcessos}
-              inputProps={{ min: 1 }}
-              sx={{ width: "150px" }}
-            />
-            <Box display="flex" justifyContent="flex-end">
-              <Button
-                variant="contained"
-                onClick={incluirMembro}
-                disabled={
-                  pessoasSelecionadas.length === 0 ||
-                  !equipeSelecionada ||
-                  maxProcessos <= 0 ||
-                  !!erroMaxProcessos
-                }
-                sx={{ width: "150px" }}
-              >
-                Incluir
-              </Button>
-            </Box>
-          </Box>
+          </Paper>
         </Box>
       </Modal>
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={3000}
-        onClose={() => setOpenSnackbar(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setOpenSnackbar(false)}
-          severity={tipoSnackbar}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {mensagemSnackbar}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

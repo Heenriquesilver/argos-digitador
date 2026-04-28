@@ -18,6 +18,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
+import SnackInfo from "../../components/snack-info/SnackInfo";
 
 import { useAuth } from "../../auth/useAuth";
 import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
@@ -35,9 +36,25 @@ export default function NovoPacotePage() {
   const [observacao, setObservacao] = useState("");
   const [prioridade, setPrioridade] = useState("NORMAL");
   const [valor, setValor] = useState("");
+  const [valorAp, setValorAp] = useState("");
+  const [qtdeAp, setQtdeAp] = useState("");
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMessage, setSnackMessage] = useState("");
+  const [snackType, setSnackType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("success");
+
+  const showSnack = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "success",
+  ) => {
+    setSnackMessage(message);
+    setSnackType(type);
+    setSnackOpen(true);
+  };
 
   const entidade = idEntidadeWork;
-  const responsavel = localStorage.getItem("idEntidadeUsuarioLogado");
+  const responsavel = localStorage.getItem("idPessoaFisicaLogada");
 
   function formatarDataHoje() {
     const hoje = new Date();
@@ -79,17 +96,17 @@ export default function NovoPacotePage() {
 
   async function salvarPacote() {
     if (!titulo) {
-      alert("Preencha os campos obrigatórios");
+      showSnack("Preencha os campos obrigatórios", "warning");
       return;
     }
 
-    if (!entidade) {
-      alert("Entidade não carregada ainda");
-      return;
-    }
+    // if (!entidade) {
+    //   alert("Entidade não carregada ainda");
+    //   return;
+    // }
 
     if (!responsavel) {
-      alert("Responsável não encontrado");
+      showSnack("Responsável não encontrado", "error");
       return;
     }
 
@@ -99,6 +116,8 @@ export default function NovoPacotePage() {
       prioridade: getPrioridadeValue(prioridade),
       status: 1,
       valor: converterValorParaNumero(valor),
+      valorAP: converterValorParaNumero(valorAp),
+      qtdeAP: Number(qtdeAp),
       responsavel: Number(responsavel),
       // alocacao: new Date().toISOString(),
       // inicio: "formatToISO(inicio)",
@@ -110,8 +129,11 @@ export default function NovoPacotePage() {
     try {
       await api.post("/api/v1/pacote-calculo", payload);
 
-      alert("Pacote criado com sucesso!");
-      navigate(-1);
+      showSnack("Pacote criado com sucesso!", "success");
+
+      setTimeout(() => {
+        navigate(-1);
+      }, 3000);
     } catch (error: any) {
       console.error("Erro completo:", error?.response?.data || error);
 
@@ -119,24 +141,24 @@ export default function NovoPacotePage() {
         error?.response?.data?.message ||
         "Erro ao criar pacote. Verifique os dados.";
 
-      alert(mensagem);
+      showSnack(mensagem, "error");
     }
   }
 
   return (
     <Box p={3}>
       <Typography variant="h5" fontWeight={600} mb={0.5} color="text.primary">
-        Criar Pacote
+        Criar Empreitada
       </Typography>
 
       <Typography color="text.secondary" mb={3}>
-        Preencha as informações abaixo para criar um pacote.
+        Preencha as informações abaixo para criar uma empreitada.
       </Typography>
 
       <Paper sx={{ p: 3 }}>
         <Stack spacing={3}>
           <Typography variant="h6" fontWeight={600}>
-            Dados do Pacote
+            Dados da Empreitada
           </Typography>
 
           <Stack direction={"row"} gap={2}>
@@ -182,12 +204,27 @@ export default function NovoPacotePage() {
             /> */}
             <Stack direction={"row"} gap={2}>
               <TextField
-                label="Valor"
+                label="Valor Unitario"
                 value={valor}
                 onChange={(e) => {
                   const valorFormatado = formatarMoeda(e.target.value);
                   setValor(valorFormatado);
                 }}
+                sx={{ width: 300 }}
+              />
+              <TextField
+                label="Valor a partir de: "
+                value={valorAp}
+                onChange={(e) => {
+                  const valorFormatado = formatarMoeda(e.target.value);
+                  setValorAp(valorFormatado);
+                }}
+                sx={{ width: 300 }}
+              />
+              <TextField
+                label="Quantidade partir de: "
+                value={qtdeAp}
+                onChange={(e) => setQtdeAp(e.target.value)}
                 sx={{ width: 300 }}
               />
 
@@ -205,35 +242,32 @@ export default function NovoPacotePage() {
                 />
               </LocalizationProvider>
             </Stack>
-            <FormControl>
-              <FormLabel sx={{ color: "#5c6cff" }}>Prioridade</FormLabel>
-              <RadioGroup
-                row
-                value={prioridade}
-                onChange={(e) => setPrioridade(e.target.value)}
-              >
-                <FormControlLabel
-                  value="NORMAL"
-                  control={<Radio />}
-                  label="NORMAL"
-                />
-                <FormControlLabel
-                  value="ALTA"
-                  control={<Radio />}
-                  label="ALTA"
-                />
-                <FormControlLabel
-                  value="URGENTE"
-                  control={<Radio />}
-                  label="URGENTE"
-                />
-              </RadioGroup>
-            </FormControl>
           </Stack>
-
+          <FormControl>
+            <FormLabel sx={{ color: "#5c6cff" }}>Prioridade</FormLabel>
+            <RadioGroup
+              row
+              value={prioridade}
+              onChange={(e) => setPrioridade(e.target.value)}
+            >
+              <FormControlLabel
+                value="NORMAL"
+                control={<Radio />}
+                label="NORMAL"
+              />
+              <FormControlLabel value="ALTA" control={<Radio />} label="ALTA" />
+              <FormControlLabel
+                value="URGENTE"
+                control={<Radio />}
+                label="URGENTE"
+              />
+            </RadioGroup>
+          </FormControl>
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <TextField
               fullWidth
+              multiline
+              rows={4}
               label="Observação"
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
@@ -255,6 +289,12 @@ export default function NovoPacotePage() {
           </Stack>
         </Stack>
       </Paper>
+      <SnackInfo
+        open={snackOpen}
+        message={snackMessage}
+        type={snackType}
+        onClose={() => setSnackOpen(false)}
+      />
     </Box>
   );
 }

@@ -15,12 +15,13 @@ import {
   ListItemButton,
   ListItemText,
 } from "@mui/material";
-
+import { useParams } from "react-router-dom";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
+import SnackInfo from "../../components/snack-info/SnackInfo";
 
 import Radio from "@mui/material/Radio";
 import type { SelectChangeEvent } from "@mui/material/Select";
@@ -33,6 +34,9 @@ type Tprioridade = "NORMAL" | "ALTA" | "URGENTE";
 export default function NovoProcessoPage() {
   const navigate = useNavigate();
 
+  const { id } = useParams();
+  const isEdit = Boolean(id);
+
   const { data: idEntidadeWork } = useGetEntidadeWork();
 
   dayjs.locale("pt-br");
@@ -42,6 +46,12 @@ export default function NovoProcessoPage() {
     ALTA: 2,
     URGENTE: 3,
   };
+
+  const hoje = dayjs().format("YYYY-MM-DD");
+
+  const [prazoFatal, setPrazoFatal] = useState(hoje);
+  const [dataSolicitacao, setDataSolicitacao] = useState(hoje);
+  const [dataNegociada, setDataNeogciada] = useState(hoje);
 
   const [prioridade, setPrioridade] = useState<Tprioridade>("NORMAL");
 
@@ -55,14 +65,33 @@ export default function NovoProcessoPage() {
   const [assuntosJuridicos, setAssuntosJuridicos] = useState<any[]>([]);
   const [assuntoSelecionado, setAssuntoSelecionado] = useState("");
 
+  const [classesProcesso, setClassesProcesso] = useState<any[]>([]);
+  const [classeSelecionada, setClasseSelecionada] = useState("");
+
   const [tribunalBusca, setTribunalBusca] = useState("");
   const [tribunais, setTribunais] = useState<any[]>([]);
   const [tribunalSelecionado, setTribunalSelecionado] = useState<any>(null);
   const [numeroProcesso, setNumeroProcesso] = useState("");
   const [reclamante, setReclamante] = useState("");
   const [reclamada, setReclamada] = useState("");
-  const [prazoFatal, setPrazoFatal] = useState("");
+
+  const [idDoCliente, setIdDoCliente] = useState("");
   const [observacao, setObservacao] = useState("");
+
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMessage, setSnackMessage] = useState("");
+  const [snackType, setSnackType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("success");
+
+  const showSnack = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "success",
+  ) => {
+    setSnackMessage(message);
+    setSnackType(type);
+    setSnackOpen(true);
+  };
 
   const handleChange = (event: SelectChangeEvent) => {
     setPrioridade(event.target.value as Tprioridade);
@@ -74,6 +103,76 @@ export default function NovoProcessoPage() {
     value: item,
     name: "prioridade-radio",
   });
+
+  const handleUppercase = (setter: (value: string) => void) => {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      setter(e.target.value.toUpperCase());
+    };
+  };
+
+  function formatNumeroProcesso(value: string) {
+    const numbers = value.replace(/\D/g, "").slice(0, 20);
+
+    return numbers
+      .replace(/^(\d{7})(\d)/, "$1-$2")
+      .replace(/^(\d{7}-\d{2})(\d)/, "$1.$2")
+      .replace(/^(\d{7}-\d{2}\.\d{4})(\d)/, "$1.$2")
+      .replace(/^(\d{7}-\d{2}\.\d{4}\.\d)(\d)/, "$1.$2")
+      .replace(/^(\d{7}-\d{2}\.\d{4}\.\d\.\d{2})(\d)/, "$1.$2");
+  }
+
+  const handleNumeroProcesso = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatNumeroProcesso(e.target.value);
+    setNumeroProcesso(formatted.toUpperCase());
+  };
+
+  async function buscarProcessoPorId() {
+    try {
+      const res = await api.get(`/api/v1/processo-judicial/${id}`);
+      const p = res.data;
+
+      setNumeroProcesso(p.numeroProcesso || "");
+      setReclamante(p.reclamante || "");
+      setReclamada(p.reclamada || "");
+      setObservacao(p.observacao || "");
+      setIdDoCliente(p.numrExterno || "");
+
+      setPrioridade(
+        (Object.keys(prioridadeMap).find(
+          (key) => prioridadeMap[key as Tprioridade] === p.prioridade,
+        ) as Tprioridade) || "NORMAL",
+      );
+
+      setPrazoFatal(p.prazo || "");
+      setDataSolicitacao(p.dataSolicitacao || "");
+      setDataNeogciada(p.dataNegociada || "");
+
+      // IDs (importante)
+      setFaseSelecionada(p.faseProcesso?.id || "");
+      setAssuntoSelecionado(p.assuntoJuridico?.id || "");
+      setClasseSelecionada(p.classeProcesso?.id || "");
+
+      // cliente
+      if (p.cliente) {
+        setClienteSelecionado(p.cliente);
+        setClienteBusca(p.cliente?.razaoSocial || "");
+      }
+
+      // tribunal
+      if (p.orgaoJulgador) {
+        setTribunalSelecionado(p.orgaoJulgador);
+        setTribunalBusca(p.orgaoJulgador?.nomeFantasia || "");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar processo", error);
+    }
+  }
+
+  useEffect(() => {
+    if (id) {
+      buscarProcessoPorId();
+    }
+  }, [id]);
 
   async function buscarCliente() {
     try {
@@ -149,7 +248,21 @@ export default function NovoProcessoPage() {
         console.error("Erro ao carregar assuntos jurídicos", error);
       }
     }
+    async function carregarClassesProcesso() {
+      try {
+        const res = await api.get("/api/v1/classe-processo", {
+          params: {
+            page: 0,
+            size: 10,
+          },
+        });
 
+        setClassesProcesso(res.data.elements);
+      } catch (error) {
+        console.error("Erro ao carregar classes do processo", error);
+      }
+    }
+    carregarClassesProcesso();
     carregarFasesProcesso();
     carregarAssuntosJuridicos();
   }, []);
@@ -159,12 +272,12 @@ export default function NovoProcessoPage() {
       const entidadePai = idEntidadeWork;
 
       if (!clienteSelecionado) {
-        alert("Selecione um cliente");
+        showSnack("Selecione um cliente", "warning");
         return;
       }
 
       if (!tribunalSelecionado) {
-        alert("Selecione um tribunal");
+        showSnack("Selecione um tribunal", "warning");
         return;
       }
 
@@ -172,26 +285,34 @@ export default function NovoProcessoPage() {
         numeroProcesso,
         entidade: Number(entidadePai),
         reclamante,
-        prioridade: prioridadeMap[prioridade],
         reclamada,
         cliente: clienteSelecionado.id,
         orgaoJulgador: tribunalSelecionado.id,
         assuntoJuridico: Number(assuntoSelecionado),
         faseProcesso: Number(faseSelecionada),
+        classeProcesso: Number(classeSelecionada),
+        prioridade: prioridadeMap[prioridade],
         prazo: prazoFatal,
         observacao,
+        numrExterno: idDoCliente,
+        dataSolicitacao,
+        dataNegociada,
       };
 
-      console.log("PAYLOAD", payload);
+      if (isEdit) {
+        await api.put(`/api/v1/processo-judicial/${id}`, payload);
+        showSnack("Processo atualizado com sucesso!", "success");
+      } else {
+        await api.post("/api/v1/processo-judicial", payload);
+        showSnack("Processo cadastrado com sucesso!", "success");
+      }
 
-      await api.post("/api/v1/processo-judicial", payload);
-
-      alert("Processo salvo com sucesso");
-
-      navigate("/processo");
+      setTimeout(() => {
+        navigate("/processo");
+      }, 2000);
     } catch (error) {
       console.error("Erro ao salvar processo", error);
-      alert("Erro ao salvar processo");
+      showSnack("Erro ao salvar processo", "error");
     }
   }
 
@@ -235,24 +356,28 @@ export default function NovoProcessoPage() {
                 }}
               />
             </Stack>
-
             <TextField
-              select
-              label="Fase do Processo"
-              sx={{ flex: 1 }}
-              value={faseSelecionada}
-              onChange={(e) => setFaseSelecionada(e.target.value)}
-            >
-              {fasesProcesso.map((fase) => (
-                <MenuItem key={fase.id} value={fase.id}>
-                  {fase.titulo}
-                </MenuItem>
-              ))}
-            </TextField>
+              label="Número do Processo"
+              placeholder="0000000-00.0000.0.00.0000"
+              value={numeroProcesso}
+              onChange={handleNumeroProcesso}
+              inputProps={{ maxLength: 25 }}
+              sx={{
+                width: "600px",
+                "& input": { textTransform: "uppercase" },
+              }}
+              required
+            />
           </Stack>
 
           {clientes.length > 0 && (
-            <Paper variant="outlined">
+            <Paper
+              variant="outlined"
+              sx={{
+                border: "2px solid #5c6cff",
+                borderRadius: 2,
+              }}
+            >
               <List>
                 {clientes.map((c) => (
                   <ListItemButton
@@ -271,49 +396,81 @@ export default function NovoProcessoPage() {
 
           {/* NÚMERO / TIPO / TRIBUNAL */}
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-            <TextField
-              sx={{ width: "600px" }}
-              label="Número do Processo"
-              placeholder="0000000-00.0000.0.00.0000"
-              value={numeroProcesso}
-              onChange={(e) => setNumeroProcesso(e.target.value)}
-              required
-            />
+            {/* LADO ESQUERDO (igual ao Cliente) */}
+            <Stack direction="row" spacing={1} flex={2}>
+              <TextField
+                select
+                label="Fase do Processo"
+                fullWidth
+                value={faseSelecionada}
+                onChange={(e) => setFaseSelecionada(e.target.value)}
+                SelectProps={{
+                  MenuProps: {
+                    PaperProps: {
+                      sx: {
+                        border: "2px solid #5c6cff",
+                        borderRadius: 2,
+                      },
+                    },
+                  },
+                }}
+              >
+                {fasesProcesso.map((fase) => (
+                  <MenuItem key={fase.id} value={fase.id}>
+                    {fase.titulo}
+                  </MenuItem>
+                ))}
+              </TextField>
 
+              <TextField
+                select
+                label="Serviço"
+                sx={{ width: "305px" }}
+                value={assuntoSelecionado}
+                onChange={(e) => setAssuntoSelecionado(e.target.value)}
+                SelectProps={{
+                  MenuProps: {
+                    PaperProps: {
+                      sx: {
+                        border: "2px solid #5c6cff",
+                        borderRadius: 2,
+                      },
+                    },
+                  },
+                }}
+              >
+                {assuntosJuridicos.map((assunto) => (
+                  <MenuItem key={assunto.id} value={assunto.id}>
+                    {assunto.titulo}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
+
+            {/* LADO DIREITO (mesma largura do Número do Processo) */}
             <TextField
-              sx={{ width: "300px" }}
               select
-              label="Tipo de Serviço"
-              value={assuntoSelecionado}
-              onChange={(e) => setAssuntoSelecionado(e.target.value)}
+              label="Classe do Processo"
+              sx={{ width: "600px" }} // 👈 igual ao Número do Processo
+              value={classeSelecionada}
+              onChange={(e) => setClasseSelecionada(e.target.value)}
+              SelectProps={{
+                MenuProps: {
+                  PaperProps: {
+                    sx: {
+                      border: "2px solid #5c6cff",
+                      borderRadius: 2,
+                    },
+                  },
+                },
+              }}
             >
-              {assuntosJuridicos.map((assunto) => (
-                <MenuItem key={assunto.id} value={assunto.id}>
-                  {assunto.titulo}
+              {classesProcesso.map((classe) => (
+                <MenuItem key={classe.id} value={classe.id}>
+                  {classe.titulo}
                 </MenuItem>
               ))}
             </TextField>
-
-            <Stack direction="row" spacing={1} flex={1}>
-              <TextField
-                fullWidth
-                label="Tribunal"
-                placeholder="Nome do tribunal"
-                value={tribunalBusca}
-                onChange={(e) => setTribunalBusca(e.target.value)}
-                InputProps={{
-                  endAdornment: (
-                    <Button
-                      variant="contained"
-                      sx={{ bgcolor: "#5c6cff", ml: 1 }}
-                      onClick={buscarTribunal}
-                    >
-                      Buscar
-                    </Button>
-                  ),
-                }}
-              />
-            </Stack>
           </Stack>
 
           {tribunais.length > 0 && (
@@ -340,27 +497,74 @@ export default function NovoProcessoPage() {
               fullWidth
               label="Reclamante"
               value={reclamante}
-              onChange={(e) => setReclamante(e.target.value)}
+              onChange={handleUppercase(setReclamante)}
               required
+              sx={{
+                "& input": { textTransform: "uppercase" },
+              }}
             />
             <TextField
               fullWidth
               label="Reclamada"
               value={reclamada}
-              onChange={(e) => setReclamada(e.target.value)}
+              onChange={handleUppercase(setReclamada)}
               required
+              sx={{
+                "& input": { textTransform: "uppercase" },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Tribunal"
+              placeholder="Nome do tribunal"
+              value={tribunalBusca}
+              onChange={handleUppercase(setTribunalBusca)}
+              InputProps={{
+                endAdornment: (
+                  <Button
+                    variant="contained"
+                    sx={{ bgcolor: "#5c6cff", ml: 1 }}
+                    onClick={buscarTribunal}
+                  >
+                    Buscar
+                  </Button>
+                ),
+              }}
+              sx={{
+                "& input": { textTransform: "uppercase" },
+              }}
             />
           </Stack>
 
           <Stack direction={{ xs: "column", md: "row" }} spacing={4}>
-            {/* <TextField
-              label="Prazo Fatal"
-              type="date"
-              value={prazoFatal}
-              onChange={(e) => setPrazoFatal(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              sx={{ width: 230 }}
-            /> */}
+            <TextField
+              sx={{ width: "230" }}
+              label="ID do processo no cliente"
+              value={idDoCliente}
+              onChange={(e) => setIdDoCliente(e.target.value)}
+              required
+            />
+            <LocalizationProvider
+              dateAdapter={AdapterDayjs}
+              adapterLocale="pt-br"
+            >
+              <DatePicker
+                label="Data da Solicitação "
+                format="DD/MM/YYYY"
+                value={dataSolicitacao ? dayjs(dataSolicitacao) : null}
+                onChange={(newValue) =>
+                  setDataSolicitacao(
+                    newValue ? newValue.format("YYYY-MM-DD") : "",
+                  )
+                }
+                sx={{ width: 230 }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                  },
+                }}
+              />
+            </LocalizationProvider>
             <LocalizationProvider
               dateAdapter={AdapterDayjs}
               adapterLocale="pt-br"
@@ -372,7 +576,28 @@ export default function NovoProcessoPage() {
                 onChange={(newValue) =>
                   setPrazoFatal(newValue ? newValue.format("YYYY-MM-DD") : "")
                 }
-                sx={{ width: 230 }}
+                sx={{ width: 248 }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                  },
+                }}
+              />
+            </LocalizationProvider>
+            <LocalizationProvider
+              dateAdapter={AdapterDayjs}
+              adapterLocale="pt-br"
+            >
+              <DatePicker
+                label="Data Negociada"
+                format="DD/MM/YYYY"
+                value={dataNegociada ? dayjs(dataNegociada) : null}
+                onChange={(newValue) =>
+                  setDataNeogciada(
+                    newValue ? newValue.format("YYYY-MM-DD") : "",
+                  )
+                }
+                sx={{ width: 248 }}
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -408,6 +633,9 @@ export default function NovoProcessoPage() {
             rows={4}
             value={observacao}
             onChange={(e) => setObservacao(e.target.value)}
+            sx={{
+              "& input": { textTransform: "uppercase" },
+            }}
           />
 
           <Stack direction="row" spacing={2} justifyContent="flex-end">
@@ -425,6 +653,12 @@ export default function NovoProcessoPage() {
           </Stack>
         </Stack>
       </Paper>
+      <SnackInfo
+        open={snackOpen}
+        message={snackMessage}
+        type={snackType}
+        onClose={() => setSnackOpen(false)}
+      />
     </Box>
   );
 }

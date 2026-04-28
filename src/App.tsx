@@ -18,6 +18,11 @@ import NovoColaboradorPage from "./pages/novo-colaborador/novoColaborador";
 import NovoUsuarioPage from "./pages/novo-usuario/novoUsuario";
 import EmpreitadasPage from "./pages/empreitadas/empreitadasPage";
 import NovoPacotePage from "./pages/novo-pacote/novoPacote";
+import CalculoDetalhesPage from "./pages/processo-detalhado/CalculoDetalhesPage";
+import EditarMembroEquipePage from "./pages/editar-membro-equipe/EditarMembroEquipePage";
+import NovaEquipePage from "./pages/nova-equipe/NovaEquipePage";
+import ClientePage from "./pages/cliente/ClientePage";
+import PerfilPage from "./pages/perfil/PerfilPage";
 
 // Layout e Rotas Privadas
 import PrivateRoute from "./routes/privateRoute";
@@ -60,6 +65,16 @@ export default function App() {
             <Route path="/novo-usuario/:id" element={<NovoUsuarioPage />} />
             <Route path="/empreitadas" element={<EmpreitadasPage />} />
             <Route path="/novo-pacote" element={<NovoPacotePage />} />
+            <Route path="/calculo/:id" element={<CalculoDetalhesPage />} />
+            <Route path="/processo/editar/:id" element={<NovoProcessoPage />} />
+            <Route
+              path="/membro-equipe/:id/editar"
+              element={<EditarMembroEquipePage />}
+            />
+            <Route path="/equipe/nova" element={<NovaEquipePage />} />
+            <Route path="/equipe/:id/editar" element={<NovaEquipePage />} />
+            <Route path="/cliente" element={<ClientePage />} />
+            <Route path="/perfil" element={<PerfilPage />} />
             {/* Futuras páginas podem ser adicionadas aqui */}
             {/* <Route path="/agenda" element={<AgendaPage />} /> */}
           </Route>

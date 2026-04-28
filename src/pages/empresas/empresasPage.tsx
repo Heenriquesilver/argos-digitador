@@ -256,9 +256,6 @@ export default function EmpresasPage() {
           }}
         />
         <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
-          <MenuItem onClick={() => alert("okey")}>Tornar Cliente</MenuItem>
-          <MenuItem onClick={handleRecusar}>Criar Campanha de Lead</MenuItem>
-          <MenuItem onClick={() => alert("okey")}>Inativar</MenuItem>
           <MenuItem
             onClick={() => {
               if (selectedRow) {
@@ -277,6 +274,9 @@ export default function EmpresasPage() {
           >
             Editar
           </MenuItem>
+          <MenuItem onClick={() => alert("okey")}>Tornar Cliente</MenuItem>
+          <MenuItem onClick={handleRecusar}>Criar Campanha de Lead</MenuItem>
+          <MenuItem onClick={() => alert("okey")}>Inativar</MenuItem>
         </Menu>
       </Box>
     </Box>

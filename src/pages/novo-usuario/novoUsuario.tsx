@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
+import SnackInfo from "../../components/snack-info/SnackInfo";
 
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios";
@@ -22,6 +23,22 @@ export default function NovoUsuarioPage() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [ativo, setAtivo] = useState(1);
   const [chaveAtivacao, setChaveAtivacao] = useState("");
+  const [nomeUsuario, setNomeUsuario] = useState("");
+
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMessage, setSnackMessage] = useState("");
+  const [snackType, setSnackType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("success");
+
+  const showSnack = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "success",
+  ) => {
+    setSnackMessage(message);
+    setSnackType(type);
+    setSnackOpen(true);
+  };
 
   const [usuarioId, setUsuarioId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,6 +59,7 @@ export default function NovoUsuarioPage() {
           setEmail(data.email || "");
           setChaveAtivacao(data.chaveAtivacao || "");
           setAtivo(data.ativo ?? 1);
+          setNomeUsuario(data.pessoaFisica.nome);
         }
       } catch (error) {
         console.error("Erro ao buscar usuário", error);
@@ -53,20 +71,60 @@ export default function NovoUsuarioPage() {
     carregarUsuario();
   }, [id]);
 
+  // async function salvarUsuario() {
+  //   try {
+  //     if (!id) {
+  //       showSnack(
+  //         "Usuario precisa estar cadastrado a um colaborador",
+  //         "warning",
+  //       );
+  //       return;
+  //     }
+
+  //     if (!email || !senha || !confirmarSenha) {
+  //       showSnack("Preencha todos os campos.", "warning");
+  //       return;
+  //     }
+
+  //     if (senha !== confirmarSenha) {
+  //       showSnack("As senhas não coincidem.", "warning");
+  //       return;
+  //     }
+
+  //     const payload = {
+  //       pessoaFisica: Number(id),
+  //       email,
+  //       senha,
+  //       ativo,
+  //       chaveAtivacao: "",
+  //     };
+
+  //     if (usuarioId) {
+  //       await api.put(`/api/v1/usuario/${usuarioId}`, payload);
+  //       showSnack("Usuário atualizado com sucesso!", "success");
+  //     } else {
+  //       await api.post("/api/v1/usuario", payload);
+  //       showSnack("Usuario cadastrado com sucesso!", "success");
+  //     }
+
+  //     navigate(-1);
+  //   } catch (error) {
+  //     console.error("Erro ao salvar usuário", error);
+  //     showSnack("Erro ao salvar usuário", "error");
+  //   }
+  // }
+
   async function salvarUsuario() {
     try {
-      if (!id) {
-        alert("Erro: usuário precisa estar vinculado a um colaborador");
-        return;
-      }
+      setLoading(true);
 
       if (!email || !senha || !confirmarSenha) {
-        alert("Preencha todos os campos");
+        showSnack("Preencha todos os campos.", "warning");
         return;
       }
 
       if (senha !== confirmarSenha) {
-        alert("As senhas não coincidem");
+        showSnack("As senhas não coincidem.", "warning");
         return;
       }
 
@@ -77,26 +135,29 @@ export default function NovoUsuarioPage() {
         ativo,
         chaveAtivacao: "",
       };
-
+      console.log("Antes do post de usuario", new Date());
       if (usuarioId) {
         await api.put(`/api/v1/usuario/${usuarioId}`, payload);
-        alert("Usuário atualizado com sucesso!");
+        showSnack("Usuário atualizado com sucesso!", "success");
       } else {
         await api.post("/api/v1/usuario", payload);
-        alert("Usuário cadastrado com sucesso!");
+        showSnack("Usuario cadastrado com sucesso!", "success");
       }
-
-      navigate(-1);
+      console.log("Depois do post de usuario", new Date());
+      setTimeout(() => {
+        navigate(-1);
+      }, 2000);
     } catch (error) {
       console.error("Erro ao salvar usuário", error);
-      alert("Erro ao salvar usuário");
+      showSnack("Erro ao salvar usuário", "error");
+    } finally {
+      setLoading(false);
     }
   }
-
   return (
     <Box p={3}>
       <Typography variant="h5" fontWeight={600} mb={0.5} color="text.primary">
-        {usuarioId ? "Editar Usuário" : "Cadastro de Usuário"}
+        {usuarioId ? `Editar Usuário ${nomeUsuario}` : "Cadastro de Usuário"}
       </Typography>
 
       <Typography color="text.secondary" mb={3}>
@@ -177,6 +238,12 @@ export default function NovoUsuarioPage() {
           </Stack>
         </Stack>
       </Paper>
+      <SnackInfo
+        open={snackOpen}
+        message={snackMessage}
+        type={snackType}
+        onClose={() => setSnackOpen(false)}
+      />
     </Box>
   );
 }

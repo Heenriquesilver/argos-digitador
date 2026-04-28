@@ -40,11 +40,13 @@ type ProcessoRow = {
   cliente: string;
   reclamada: string;
   reclamante: string;
-
   tipoServico: string;
   fase: string;
   tribunal: string;
-  status: string;
+
+  statusId: number;
+  statusTitulo: string;
+
   prioridade: Tprioridade;
   prazo: string;
 };
@@ -60,6 +62,7 @@ export default function ProcessoPage() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<ProcessoRow | null>(null);
   const [rowsOriginal, setRowsOriginal] = useState<ProcessoRow[]>([]);
+  // const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
 
   const prioridadeLabelMap: Record<number, Tprioridade> = {
     1: "NORMAL",
@@ -86,11 +89,18 @@ export default function ProcessoPage() {
     maisDoisDias.setDate(hoje.getDate() + 2);
   }
 
+  function formatarData(data: string) {
+    if (!data) return "-";
+
+    return dayjs(data).format("DD/MM/YYYY");
+  }
+
   const [filtros, setFiltros] = useState({
     numero: "",
     cliente: "",
     tipoServico: "-",
-    status: "",
+
+    fase: "",
     periodoInicio: formatDate(hoje),
     prazo: formatDate(maisDoisDias),
     responsavel: "",
@@ -109,6 +119,18 @@ export default function ProcessoPage() {
     setAnchorEl(event.currentTarget);
     setSelectedRow(row);
   };
+
+  // async function buscarStatus() {
+  //   try {
+  //     const res = await api.get("/api/v1/status-calculo", {
+  //       params: { page: 0, size: 20 },
+  //     });
+
+  //     setStatusOptions(res.data.elements);
+  //   } catch (error) {
+  //     console.error("Erro ao buscar status", error);
+  //   }
+  // }
 
   const buscarProcessos = async () => {
     try {
@@ -130,7 +152,8 @@ export default function ProcessoPage() {
           tipoServico: p.assuntoJuridico?.titulo || "",
           fase: p.faseProcesso?.titulo || "",
           tribunal: p.orgaoJulgador?.nomeFantasia || "",
-          status: "Em Análise",
+          numrExterno: p.numrExterno || "-",
+          dataNegociada: p.dataNegociada || "-",
           prioridade: prioridadeLabelMap[p.prioridade],
           prazo: p.prazo,
         }),
@@ -145,11 +168,7 @@ export default function ProcessoPage() {
   };
 
   useEffect(() => {
-    const carregar = async () => {
-      await buscarProcessos();
-    };
-
-    carregar();
+    buscarProcessos();
   }, []);
 
   const aplicarFiltros = () => {
@@ -167,18 +186,28 @@ export default function ProcessoPage() {
       );
     }
 
-    if (filtros.status) {
-      filtrados = filtrados.filter((p) => p.status === filtros.status);
+    if (filtros.fase) {
+      filtrados = filtrados.filter((p) =>
+        p.fase.toLowerCase().includes(filtros.fase.toLowerCase()),
+      );
     }
 
     if (filtros.periodoInicio) {
       filtrados = filtrados.filter(
-        (p) => p.prazo && p.prazo >= filtros.periodoInicio,
+        (p) =>
+          p.prazo &&
+          dayjs(p.prazo).isAfter(
+            dayjs(filtros.periodoInicio).subtract(1, "day"),
+          ),
       );
     }
 
     if (filtros.prazo) {
-      filtrados = filtrados.filter((p) => p.prazo && p.prazo <= filtros.prazo);
+      filtrados = filtrados.filter(
+        (p) =>
+          p.prazo &&
+          dayjs(p.prazo).isBefore(dayjs(filtros.prazo).add(1, "day")),
+      );
     }
 
     setRows(filtrados);
@@ -189,9 +218,10 @@ export default function ProcessoPage() {
       numero: "",
       cliente: "",
       tipoServico: "-",
-      status: "",
-      periodoInicio: "",
-      prazo: "",
+      fase: "",
+
+      periodoInicio: formatDate(hoje),
+      prazo: formatDate(maisDoisDias),
       responsavel: "",
     });
   };
@@ -239,25 +269,7 @@ export default function ProcessoPage() {
       flex: 1,
       headerClassName: "cor-background-headerName",
     },
-    {
-      field: "status",
-      headerName: "Status",
-      flex: 1,
-      renderCell: (params) => (
-        <Chip
-          size="small"
-          label={params.value}
-          color={
-            params.value === "Finalizado"
-              ? "success"
-              : params.value === "Em Análise"
-                ? "warning"
-                : "info"
-          }
-        />
-      ),
-      headerClassName: "cor-background-headerName",
-    },
+
     {
       field: "prioridade",
       headerName: "Prioridade",
@@ -278,9 +290,23 @@ export default function ProcessoPage() {
       headerClassName: "cor-background-headerName",
     },
     {
+      field: "numrExterno",
+      headerName: "Numr Ext",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
       field: "prazo",
       headerName: "Prazo",
       flex: 1,
+      valueFormatter: (value) => formatarData(value as string),
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "dataNegociada",
+      headerName: "Negociada",
+      flex: 1,
+      valueFormatter: (value) => formatarData(value as string),
       headerClassName: "cor-background-headerName",
     },
     {
@@ -442,18 +468,12 @@ export default function ProcessoPage() {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                select
-                label="Status"
-                value={filtros.status}
+                label="Fase"
+                value={filtros.fase}
                 onChange={(e) =>
-                  setFiltros({ ...filtros, status: e.target.value })
+                  setFiltros({ ...filtros, fase: e.target.value })
                 }
-              >
-                <MenuItem value="Todos">Todos</MenuItem>
-                <MenuItem value="Em Análise">Em Análise</MenuItem>
-                <MenuItem value="Calculando">Calculando</MenuItem>
-                <MenuItem value="Finalizado">Finalizado</MenuItem>
-              </TextField>
+              />
             </Grid>
 
             <Grid item xs={12} md={4}>
@@ -575,7 +595,9 @@ export default function ProcessoPage() {
         />
         <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
           <MenuItem
-            onClick={() => console.log("linhaSelecionada", selectedRow)}
+            onClick={() => {
+              navigate(`/processo/editar/${selectedRow?.id}`);
+            }}
           >
             Editar
           </MenuItem>

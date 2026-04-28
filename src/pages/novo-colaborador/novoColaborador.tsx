@@ -8,9 +8,12 @@ import {
   Stack,
 } from "@mui/material";
 
+import SnackInfo from "../../components/snack-info/SnackInfo";
+
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 
@@ -23,6 +26,8 @@ import api from "../../api/axios";
 export default function NovoColaboradorPage() {
   const navigate = useNavigate();
 
+  const { data: idEntidadeWork } = useGetEntidadeWork();
+
   const { id } = useParams();
   const isEdit = !!id;
 
@@ -34,6 +39,21 @@ export default function NovoColaboradorPage() {
   const [dtNascto, setDtNascto] = useState("");
   const [entidadeOriginal, setEntidadeOriginal] = useState<number | null>(null);
   const [idColaborador, setIdColaborador] = useState<number | null>(null);
+
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMessage, setSnackMessage] = useState("");
+  const [snackType, setSnackType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("success");
+
+  const showSnack = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "success",
+  ) => {
+    setSnackMessage(message);
+    setSnackType(type);
+    setSnackOpen(true);
+  };
 
   function maskCPF(value: string) {
     return value
@@ -68,6 +88,7 @@ export default function NovoColaboradorPage() {
         setIdColaborador(data.id);
       } catch (error) {
         console.error("Erro ao carregar colaborador", error);
+        showSnack("Erro ao carregar colaborador", "error");
       }
     }
 
@@ -77,7 +98,7 @@ export default function NovoColaboradorPage() {
   async function salvarColaborador() {
     try {
       if (!nome || !cpf || !telefone || !dtNascto) {
-        alert("Preencha todos os campos obrigatórios");
+        showSnack("Preencha todos os campos obrigatórios", "warning");
         return;
       }
 
@@ -99,17 +120,32 @@ export default function NovoColaboradorPage() {
       if (isEdit) {
         await api.put(`/api/v1/pessoa_fisica/${id}`, payloadEditar);
 
-        alert("Colaborador atualizado com sucesso!");
+        showSnack("Colaborador atualizado com sucesso!", "success");
       } else {
-        await api.post("/api/v1/pessoa_fisica", payload);
+        const response = await api.post("/api/v1/pessoa_fisica", payload);
 
-        alert("Colaborador cadastrado com sucesso!");
+        const idEntidadePessoaFisica = response.data.entidade?.id;
+
+        if (!idEntidadePessoaFisica) {
+          throw new Error("ID não retornado na criação do colaborador");
+        }
+
+        await api.post("/api/v1/conexao_social", {
+          entidadePai: Number(idEntidadeWork),
+          entidadeFilha: idEntidadePessoaFisica,
+          tipoConexaoSocial: 6,
+          ativo: 1,
+        });
+
+        showSnack("Colaborador cadastrado com sucesso!", "success");
       }
 
-      navigate(-1);
+      setTimeout(() => {
+        navigate("/colaboradores");
+      }, 2000);
     } catch (error) {
       console.error("Erro ao salvar colaborador", error);
-      alert("Erro ao salvar colaborador");
+      showSnack("Erro ao salvar colaborador", "error");
     }
   }
 
@@ -204,6 +240,12 @@ export default function NovoColaboradorPage() {
           </Stack>
         </Stack>
       </Paper>
+      <SnackInfo
+        open={snackOpen}
+        message={snackMessage}
+        type={snackType}
+        onClose={() => setSnackOpen(false)}
+      />
     </Box>
   );
 }

@@ -2,7 +2,7 @@ import api from "./axios";
 
 interface LoginPayload {
   email: string;
-  senha: string; // será usado como senha
+  senha: string;
 }
 
 const saveAuth = (data: any) => {

@@ -30,25 +30,52 @@ const menuItems = [
   { label: "Home", icon: <HomeIcon />, path: "/home" },
   { label: "Processos", icon: <EventIcon />, path: "/processo" },
   { label: "Calculos", icon: <PeopleIcon />, path: "/calculos" },
-  { label: "Documentos", icon: <PeopleIcon />, path: "/documentos" },
-  { label: "Comunicacao", icon: <PeopleIcon />, path: "/comunicacao" },
 
-  { label: "Qualidade", icon: <PeopleIcon />, path: "/profissionais" },
+  {
+    label: "Documentos",
+    icon: <PeopleIcon />,
+    path: "/documentos",
+    disabled: true,
+  },
+  {
+    label: "Comunicacao",
+    icon: <PeopleIcon />,
+    path: "/comunicacao",
+    disabled: true,
+  },
+  {
+    label: "Qualidade",
+    icon: <PeopleIcon />,
+    path: "/profissionais",
+    disabled: true,
+  },
   { label: "Empreitadas", icon: <PeopleIcon />, path: "/empreitadas" },
-  { label: "Medicoes", icon: <PeopleIcon />, path: "/profissionais" },
+  {
+    label: "Medicoes",
+    icon: <PeopleIcon />,
+    path: "/profissionais",
+    disabled: true,
+  },
+
   { label: "Equipe", icon: <PeopleIcon />, path: "/equipe" },
-  { label: "Clientes", icon: <PeopleIcon />, path: "/profissionais" },
-  { label: "Contratos", icon: <PeopleIcon />, path: "/profissionais" },
+  { label: "Clientes", icon: <PeopleIcon />, path: "/cliente" },
+  {
+    label: "Contratos",
+    icon: <PeopleIcon />,
+    path: "/profissionais",
+    disabled: true,
+  },
   { label: "Cartilhas", icon: <PeopleIcon />, path: "/profissionais" },
   { label: "Empresas", icon: <PeopleIcon />, path: "/empresas" },
   { label: "Colaboradores", icon: <PeopleIcon />, path: "/colaboradores" },
 ];
 
 export default function AppLayout() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(true);
+  const usuario = localStorage.getItem("usuario");
 
   const menuItemStyle = {
     "&:hover": {
@@ -107,10 +134,11 @@ export default function AppLayout() {
 
           {/* USUÁRIO */}
           <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <Typography fontWeight={600}>
-              {user?.person?.name || "Usuário"}
-            </Typography>
-            <Avatar />
+            <Typography fontWeight={600}>{usuario || "Usuário"}</Typography>
+            <Avatar
+              sx={{ cursor: "pointer" }}
+              onClick={() => navigate("/perfil")}
+            />
           </Box>
         </Toolbar>
       </AppBar>
@@ -168,11 +196,27 @@ export default function AppLayout() {
             <ListItem key={item.label} disablePadding>
               <ListItemButton
                 selected={location.pathname === item.path}
-                onClick={() => navigate(item.path)}
-                sx={menuItemStyle}
+                disabled={item.disabled}
+                onClick={() => {
+                  if (!item.disabled) {
+                    navigate(item.path);
+                  }
+                }}
+                sx={{
+                  ...menuItemStyle,
+                  ...(item.disabled && {
+                    opacity: 0.5,
+                    cursor: "not-allowed",
+                  }),
+                }}
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.label} />
+                <ListItemText
+                  primary={item.label}
+                  sx={{
+                    ...(item.disabled && { color: "#999" }),
+                  }}
+                />
               </ListItemButton>
             </ListItem>
           ))}

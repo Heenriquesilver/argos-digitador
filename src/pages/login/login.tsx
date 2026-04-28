@@ -12,28 +12,28 @@ import {
   Paper,
 } from "@mui/material";
 
-type Mode = "password" | "code";
+import InputAdornment from "@mui/material/InputAdornment";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import IconButton from "@mui/material/IconButton";
 
 export default function LoginPage() {
-  const { loginPassword, loginCode } = useAuth();
+  const { loginPassword } = useAuth();
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState<Mode>("password");
   const [email, setEmail] = useState("");
   const [credential, setCredential] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     setLoading(true);
     setError("");
 
     try {
-      if (mode === "password") {
-        await loginPassword(email, credential);
-      } else {
-        await loginCode(email, credential);
-      }
+      await loginPassword(email, credential);
       navigate("/home");
     } catch (err) {
       console.error("ERRO LOGIN:", err);
@@ -77,6 +77,11 @@ export default function LoginPage() {
         }}
       >
         <Paper
+          component="form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleLogin();
+          }}
           elevation={0}
           sx={{
             width: "100%",
@@ -138,33 +143,30 @@ export default function LoginPage() {
             />
           </Box>
 
-          {mode === "password" && (
-            <Box mt={2}>
-              <Typography textAlign="left" fontSize={14} mb={1}>
-                Senha
-              </Typography>
-              <TextField
-                type="password"
-                fullWidth
-                value={credential}
-                onChange={(e) => setCredential(e.target.value)}
-                sx={{ bgcolor: "#fff", borderRadius: 3 }}
-              />
-            </Box>
-          )}
-          {mode === "code" && (
-            <Box mt={2}>
-              <Typography textAlign="left" fontSize={14} mb={1}>
-                Verification Code
-              </Typography>
-              <TextField
-                fullWidth
-                value={credential}
-                onChange={(e) => setCredential(e.target.value)}
-                sx={{ bgcolor: "#fff", borderRadius: 3 }}
-              />
-            </Box>
-          )}
+          <Box mt={2}>
+            <Typography textAlign="left" fontSize={14} mb={1}>
+              Senha
+            </Typography>
+            <TextField
+              type={showPassword ? "text" : "password"}
+              fullWidth
+              value={credential}
+              onChange={(e) => setCredential(e.target.value)}
+              sx={{ bgcolor: "#fff", borderRadius: 3 }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
           <Box mt={1} textAlign="right">
             <Typography fontSize={13} color="#5c6cff">
               Esqueceu a senha ?
@@ -172,6 +174,7 @@ export default function LoginPage() {
           </Box>
           <Button
             fullWidth
+            type="submit"
             variant="contained"
             sx={{
               mt: 2,
@@ -186,38 +189,9 @@ export default function LoginPage() {
           >
             {loading ? "loading..." : "Entrar"}
           </Button>
-          <Button
-            fullWidth
-            sx={{
-              mt: 2,
-              borderRadius: 5,
-              textTransform: "none",
-              fontSize: 16,
-              color: "#5c6cff",
-            }}
-            onClick={() => {
-              setMode("password");
-              setCredential("");
-            }}
-          >
-            Entrar Com Senha
-          </Button>
-          <Button
-            fullWidth
-            sx={{
-              mt: 1,
-              borderRadius: 5,
-              fontSize: 16,
-              color: "#5c6cff",
-              textTransform: "none",
-            }}
-            onClick={() => {
-              setMode("code");
-              setCredential("");
-            }}
-          >
-            Entrar Com Codigo
-          </Button>
+          <Typography mt={1.5} fontSize={12} color="gray" textAlign="center">
+            Versão 3.2026.04.27
+          </Typography>
           {error && (
             <Typography color="error" mt={2} fontSize={14}>
               {error}

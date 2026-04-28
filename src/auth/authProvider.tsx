@@ -25,9 +25,14 @@ export function AuthProvider({ children }: Props) {
       localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("IdEntidadePai", res.data.usuario.id);
       localStorage.setItem(
+        "idPessoaFisicaLogada",
+        res.data.usuario.pessoaFisica.id,
+      );
+      localStorage.setItem(
         "idEntidadeUsuarioLogado",
         res.data.usuario.pessoaFisica.entidade.id,
       );
+
       localStorage.setItem("user", JSON.stringify(res.data.usuario));
       localStorage.setItem(
         "usuario",

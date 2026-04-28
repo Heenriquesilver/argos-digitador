@@ -128,6 +128,10 @@ export default function ColaboradoresPage() {
   ];
 
   const handleBuscar = async () => {
+    if (!busca.trim()) {
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -135,7 +139,7 @@ export default function ColaboradoresPage() {
         "/api/v1/pessoa_fisica/termo",
         {
           params: {
-            termo: "",
+            termo: busca,
             entidade_pai: entidadePai,
             page: 0,
             size: 10,
