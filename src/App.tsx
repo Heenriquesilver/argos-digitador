@@ -22,11 +22,12 @@ import CalculoDetalhesPage from "./pages/processo-detalhado/CalculoDetalhesPage"
 import EditarMembroEquipePage from "./pages/editar-membro-equipe/EditarMembroEquipePage";
 import NovaEquipePage from "./pages/nova-equipe/NovaEquipePage";
 import ClientePage from "./pages/cliente/ClientePage";
-import PerfilPage from "./pages/perfil/PerfilPage";
+import PerfilPage from "./pages/perfil/perfilPage";
 
 // Layout e Rotas Privadas
 import PrivateRoute from "./routes/privateRoute";
 import AppLayout from "./layouts/AppLayout";
+import AlterarSenhaPage from "./pages/alterar-senha/alterarSenhaPage";
 
 export default function App() {
   return (
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="/equipe/:id/editar" element={<NovaEquipePage />} />
             <Route path="/cliente" element={<ClientePage />} />
             <Route path="/perfil" element={<PerfilPage />} />
+            <Route path="/alterar-senha" element={<AlterarSenhaPage />} />
             {/* Futuras páginas podem ser adicionadas aqui */}
             {/* <Route path="/agenda" element={<AgendaPage />} /> */}
           </Route>

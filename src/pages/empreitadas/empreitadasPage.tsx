@@ -26,6 +26,7 @@ import Grid from "@mui/material/GridLegacy";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Modal, Paper } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 import api from "../../api/axios";
 import useGetEntidadeWork from "../../api/hooks/useGetEntidadeWork";
@@ -50,6 +51,9 @@ export default function EmpreitadasPage() {
   const [openModal, setOpenModal] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [detalhesSelecionados, setDetalhesSelecionados] = useState<any[]>([]);
+
+  const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
   const [openFilter, setOpenFilter] = useState(false);
 
@@ -140,6 +144,17 @@ export default function EmpreitadasPage() {
     }
   }
 
+  async function deletarDetalhe(id: number) {
+    try {
+      await api.delete(`/api/v1/pacote-calculo-item/${id}`);
+
+      // atualiza a lista do modal
+      setDetalhesSelecionados((prev) => prev.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Erro ao deletar item", error);
+    }
+  }
+
   async function fetchDetalhes(id: number) {
     try {
       setLoadingDetalhes(true);
@@ -152,8 +167,8 @@ export default function EmpreitadasPage() {
         response.data?.elements ||
         (Array.isArray(response.data) ? response.data : [response.data]);
 
-      return lista.map((item: any, index: number) => ({
-        id: item?.calculoJudicial?.id ?? index,
+      return lista.map((item: any) => ({
+        id: item?.id,
         numeroProcesso:
           item?.calculoJudicial?.processoJudicial?.numeroProcesso ||
           "Sem número",
@@ -243,6 +258,24 @@ export default function EmpreitadasPage() {
       headerName: "Prazo",
       width: 120,
       headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "acoes",
+      headerName: "Ações",
+      width: 100,
+      headerClassName: "cor-background-headerName",
+      renderCell: (params) => {
+        return (
+          <IconButton
+            onClick={() => {
+              setItemToDelete(params.row.id);
+              setOpenConfirmDelete(true);
+            }}
+          >
+            <DeleteIcon />
+          </IconButton>
+        );
+      },
     },
   ];
 
@@ -590,6 +623,52 @@ export default function EmpreitadasPage() {
                 },
               }}
             />
+          </Paper>
+        </Box>
+      </Modal>
+      <Modal
+        open={openConfirmDelete}
+        onClose={() => setOpenConfirmDelete(false)}
+      >
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="100vh"
+        >
+          <Paper
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              width: 300,
+              textAlign: "center",
+            }}
+          >
+            <Typography mb={2}>
+              Tem certeza que deseja remover este item ?
+            </Typography>
+
+            <Box display="flex" justifyContent="space-between">
+              <Button
+                variant="outlined"
+                onClick={() => setOpenConfirmDelete(false)}
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                variant="contained"
+                color="error"
+                onClick={async () => {
+                  if (itemToDelete !== null) {
+                    await deletarDetalhe(itemToDelete);
+                  }
+                  setOpenConfirmDelete(false);
+                }}
+              >
+                Excluir
+              </Button>
+            </Box>
           </Paper>
         </Box>
       </Modal>

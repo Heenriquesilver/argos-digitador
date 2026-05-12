@@ -98,9 +98,8 @@ export default function AppLayout() {
   return (
     <Box
       sx={{
-        display: "flex",
-        width: "100vw",
-        height: "100vh",
+        width: "100%",
+        minHeight: "100vh",
       }}
     >
       {/* HEADER */}
@@ -186,7 +185,7 @@ export default function AppLayout() {
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             top: "64px",
-            height: "calc(100% - 64px)",
+            height: "calc(100vh - 64px)",
             borderRight: "1px solid #e5e7eb",
           },
         }}
@@ -244,9 +243,11 @@ export default function AppLayout() {
         component="main"
         sx={{
           flexGrow: 1,
-          mt: 8,
+          mt: "64px",
+          height: "100%",
+          overflowY: "hidden", // 👈 apenas vertical
+          overflowX: "hidden",
           p: 3,
-          transition: "margin 0.3s",
           marginLeft: open ? `${drawerWidth}px` : 0,
         }}
       >

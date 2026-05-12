@@ -205,7 +205,7 @@ export default function DistribuicaoCarga() {
         observacao: "",
       };
 
-      await api.post("/api/v1/calculo-judicial", payload);
+      await api.put("/api/v1/calculo-judicial", payload);
       showSnack("Processo atribuído com sucesso!", "success");
       setProcessos((prev) => prev.filter((p) => p.id !== proc.id));
     } catch (error) {

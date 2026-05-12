@@ -317,7 +317,17 @@ export default function NovoProcessoPage() {
   }
 
   return (
-    <Box p={3}>
+    <Box
+      sx={{
+        flex: 1,
+        p: 3,
+        marginLeft: 2,
+        width: "100%",
+        maxWidth: "100%",
+        overflow: "hidden",
+        boxSizing: "border-box",
+      }}
+    >
       <Typography variant="h5" fontWeight={600} mb={0.5} color="text.primary">
         Cadastro de Processo
       </Typography>
@@ -474,7 +484,10 @@ export default function NovoProcessoPage() {
           </Stack>
 
           {tribunais.length > 0 && (
-            <Paper variant="outlined">
+            <Paper
+              variant="outlined"
+              sx={{ border: "2px solid #5c6cff", borderRadius: 2 }}
+            >
               <List>
                 {tribunais.map((t) => (
                   <ListItemButton
@@ -536,9 +549,9 @@ export default function NovoProcessoPage() {
             />
           </Stack>
 
-          <Stack direction={{ xs: "column", md: "row" }} spacing={4}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <TextField
-              sx={{ width: "230" }}
+              sx={{ width: 200 }}
               label="ID do processo no cliente"
               value={idDoCliente}
               onChange={(e) => setIdDoCliente(e.target.value)}
@@ -557,7 +570,7 @@ export default function NovoProcessoPage() {
                     newValue ? newValue.format("YYYY-MM-DD") : "",
                   )
                 }
-                sx={{ width: 230 }}
+                sx={{ width: 220 }}
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -576,7 +589,7 @@ export default function NovoProcessoPage() {
                 onChange={(newValue) =>
                   setPrazoFatal(newValue ? newValue.format("YYYY-MM-DD") : "")
                 }
-                sx={{ width: 248 }}
+                sx={{ width: 220 }}
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -597,7 +610,7 @@ export default function NovoProcessoPage() {
                     newValue ? newValue.format("YYYY-MM-DD") : "",
                   )
                 }
-                sx={{ width: 248 }}
+                sx={{ width: 220 }}
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -606,20 +619,41 @@ export default function NovoProcessoPage() {
               />
             </LocalizationProvider>
 
-            <FormControl>
-              <FormLabel sx={{ color: "#5c6cff" }}>Prioridade</FormLabel>
+            <FormControl
+              sx={{
+                minWidth: 0, // 🔥 ESSENCIAL pra permitir encolher dentro do flex
+                flexShrink: 1,
+              }}
+            >
+              <FormLabel sx={{ color: "#5c6cff", fontSize: 12 }}>
+                Prioridade
+              </FormLabel>
 
-              <RadioGroup value={prioridade} row>
+              <RadioGroup
+                value={prioridade}
+                row
+                sx={{
+                  flexWrap: "nowrap", // 👈 NÃO quebra linha
+                  overflow: "hidden", // 👈 evita estourar container
+                  "& .MuiFormControlLabel-root": {
+                    marginRight: 1,
+                  },
+                  "& .MuiFormControlLabel-label": {
+                    fontSize: 12,
+                    whiteSpace: "nowrap", // 👈 evita quebrar texto
+                  },
+                }}
+              >
                 <FormControlLabel
-                  control={<Radio {...controlProps("NORMAL")} />}
+                  control={<Radio {...controlProps("NORMAL")} size="small" />}
                   label="NORMAL"
                 />
                 <FormControlLabel
-                  control={<Radio {...controlProps("ALTA")} />}
+                  control={<Radio {...controlProps("ALTA")} size="small" />}
                   label="ALTA"
                 />
                 <FormControlLabel
-                  control={<Radio {...controlProps("URGENTE")} />}
+                  control={<Radio {...controlProps("URGENTE")} size="small" />}
                   label="URGENTE"
                 />
               </RadioGroup>

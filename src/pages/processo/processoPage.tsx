@@ -332,11 +332,12 @@ export default function ProcessoPage() {
   return (
     <Box
       sx={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100%",
-        width: "100%",
+        flex: 1,
         p: 3,
+        marginLeft: 2,
+        width: "100%",
+        maxWidth: "100%",
+        overflow: "hidden",
         boxSizing: "border-box",
       }}
     >
