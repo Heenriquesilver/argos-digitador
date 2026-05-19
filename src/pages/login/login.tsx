@@ -420,7 +420,7 @@ export default function LoginPage() {
             fontSize={{ xs: 10, sm: 11, md: 12 }}
             color="gray"
           >
-            Versão 3.2026.04.28
+            Versão 3.2026.05.12
           </Typography>
 
           {/* ERRO */}

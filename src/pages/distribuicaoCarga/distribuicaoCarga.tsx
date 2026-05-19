@@ -40,6 +40,15 @@ type Tprocesso = {
   observacao: number;
 };
 
+type TCargaEquipe = {
+  membroEquipeId: number;
+  metaDia: number;
+  alocadoDia: number;
+  metaMes: number;
+  alocadoMes: number;
+  membroEquipeNome: string;
+};
+
 export default function DistribuicaoCarga() {
   // const [pessoas, setPessoas] = useState<any[]>([]);
 
@@ -49,6 +58,8 @@ export default function DistribuicaoCarga() {
   );
   const [membrosEquipe, setMembrosEquipe] = useState<any[]>([]);
   const [membroSelecionado, setMembroSelecionado] = useState("");
+
+  const [cargaEquipe, setCargaEquipe] = useState<TCargaEquipe[]>([]);
 
   const [snackOpen, setSnackOpen] = useState(false);
   const [snackMessage, setSnackMessage] = useState("");
@@ -73,83 +84,10 @@ export default function DistribuicaoCarga() {
     (location.state?.processos as Tprocesso[]) || [],
   );
 
-  const equipe = [
-    {
-      id: 1,
-      nome: "Ricardo Silva",
-      cargo: "Calculista Sênior",
-      carga: 3,
-      total: 6,
-      status: "Disponível",
-    },
-    {
-      id: 2,
-      nome: "Ana Carolina",
-      cargo: "Calculista Pleno",
-      carga: 5,
-      total: 6,
-      status: "Limite Próximo",
-    },
-    {
-      id: 3,
-      nome: "Marcos Lima",
-      cargo: "Calculista Júnior",
-      carga: 2,
-      total: 6,
-      status: "Disponível",
-    },
-    {
-      id: 4,
-      nome: "Fernanda Souza",
-      cargo: "Calculista Pleno",
-      carga: 4,
-      total: 6,
-      status: "Limite Próximo",
-    },
-    {
-      id: 5,
-      nome: "Carlos Mendes",
-      cargo: "Calculista Sênior",
-      carga: 1,
-      total: 6,
-      status: "Disponível",
-    },
-    {
-      id: 6,
-      nome: "Juliana Alves",
-      cargo: "Calculista Júnior",
-      carga: 6,
-      total: 6,
-      status: "Limite Próximo",
-    },
-  ];
-
-  const dadosGrafico = equipe.map((membro) => ({
-    label: membro.id.toString(),
-    value: membro.carga,
+  const dadosGrafico = cargaEquipe.map((membro) => ({
+    label: membro.membroEquipeNome,
+    value: membro.alocadoDia,
   }));
-
-  // useEffect(() => {
-  //   const fetchPessoas = async () => {
-  //     try {
-  //       const entidadePai = idEntidadeWork;
-
-  //       const response = await api.get("/api/v1/pessoa_fisica", {
-  //         params: {
-  //           entidade_pai: entidadePai,
-  //           page: 0,
-  //           size: 10,
-  //         },
-  //       });
-
-  //       setPessoas(response.data?.elements || []);
-  //     } catch (error) {
-  //       console.error("Erro ao buscar pessoas", error);
-  //     }
-  //   };
-
-  //   fetchPessoas();
-  // }, [idEntidadeWork]);
 
   useEffect(() => {
     const fetchEquipes = async () => {
@@ -186,6 +124,29 @@ export default function DistribuicaoCarga() {
     }
   };
 
+  const fetchCargaEquipe = async (equipeId: number) => {
+    try {
+      const hoje = new Date();
+
+      const dia = hoje.getDate();
+      const mes = hoje.getMonth() + 1;
+      const ano = hoje.getFullYear();
+
+      const response = await api.get("/api/v1/datainfo-equipe/carga-trabalho", {
+        params: {
+          equipe: equipeId,
+          dia,
+          mes,
+          ano,
+        },
+      });
+
+      setCargaEquipe(response.data || []);
+    } catch (error) {
+      console.error("Erro ao buscar carga da equipe", error);
+    }
+  };
+
   const atribuirProcesso = async (proc: Tprocesso) => {
     if (!membroSelecionado) {
       showSnack("Selecione um responsável antes de atribuir.", "warning");
@@ -205,7 +166,7 @@ export default function DistribuicaoCarga() {
         observacao: "",
       };
 
-      await api.put("/api/v1/calculo-judicial", payload);
+      await api.post("/api/v1/calculo-judicial", payload);
       showSnack("Processo atribuído com sucesso!", "success");
       setProcessos((prev) => prev.filter((p) => p.id !== proc.id));
     } catch (error) {
@@ -213,6 +174,15 @@ export default function DistribuicaoCarga() {
       showSnack("Erro ao atribuir processo.", "error");
     }
   };
+
+  const dataAtual = new Date()
+    .toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+    })
+    .replace(".", "");
+
+  const dataFormatada = dataAtual.charAt(0).toUpperCase() + dataAtual.slice(1);
 
   return (
     <Box
@@ -242,7 +212,7 @@ export default function DistribuicaoCarga() {
         >
           <Stack direction="row" spacing={2}>
             <Button variant="contained" sx={{ bgcolor: "#5c6cff" }}>
-              Hoje, 24 Mai
+              Hoje, {dataFormatada}
             </Button>
 
             <IconButton>
@@ -309,8 +279,12 @@ export default function DistribuicaoCarga() {
               value={equipeSelecionada ?? ""}
               onChange={(e) => {
                 const id = Number(e.target.value);
+
                 setEquipeSelecionada(id);
+
                 fetchMembrosEquipe(id);
+                fetchCargaEquipe(id);
+
                 setMembroSelecionado("");
               }}
               sx={{ mb: 3 }}
@@ -427,7 +401,7 @@ export default function DistribuicaoCarga() {
 
               <Stack direction="row" spacing={2}>
                 {[
-                  { label: "Live", color: "#22C55E" },
+                  { label: "Disponível", color: "#22C55E" },
                   { label: "Normal", color: "#4F46E5" },
                   { label: "Sobrecarregado", color: "#F59E0B" },
                 ].map((item) => (
@@ -453,18 +427,33 @@ export default function DistribuicaoCarga() {
 
             {/* CARDS */}
             <Grid container spacing={2} sx={{ flex: 1, overflow: "auto" }}>
-              {equipe.map((membro) => {
-                const porcentagem = (membro.carga / membro.total) * 100;
+              {cargaEquipe.map((membro) => {
+                const porcentagemDia =
+                  membro.metaDia > 0
+                    ? (membro.alocadoDia / membro.metaDia) * 100
+                    : 0;
 
-                const corBarra =
-                  porcentagem >= 90
+                const porcentagemMes =
+                  membro.metaMes > 0
+                    ? (membro.alocadoMes / membro.metaMes) * 100
+                    : 0;
+
+                const corBarraDia =
+                  porcentagemDia >= 90
                     ? "#F59E0B"
-                    : porcentagem >= 60
+                    : porcentagemDia >= 60
+                      ? "#4F46E5"
+                      : "#22C55E";
+
+                const corBarraMes =
+                  porcentagemMes >= 90
+                    ? "#F59E0B"
+                    : porcentagemMes >= 60
                       ? "#4F46E5"
                       : "#22C55E";
 
                 return (
-                  <Grid item xs={12} sm={6} key={membro.id}>
+                  <Grid item xs={12} sm={6} key={membro.membroEquipeId}>
                     <Paper
                       sx={{
                         p: 2,
@@ -473,16 +462,17 @@ export default function DistribuicaoCarga() {
                         height: "100%",
                       }}
                     >
-                      {/* NOME + CARGA */}
+                      {/* HEADER */}
                       <Stack direction="row" spacing={2} alignItems="center">
                         <Avatar />
 
                         <Box flex={1}>
                           <Typography fontWeight={600} fontSize={14}>
-                            {membro.nome}
+                            {membro.membroEquipeNome}
                           </Typography>
+
                           <Typography variant="caption" color="text.secondary">
-                            {membro.cargo}
+                            Capacidade diária
                           </Typography>
                         </Box>
 
@@ -494,28 +484,68 @@ export default function DistribuicaoCarga() {
                           >
                             CARGA
                           </Typography>
+
                           <Typography fontWeight={700} fontSize={14}>
-                            {membro.carga}/{membro.total}
+                            {membro.alocadoDia}/{membro.metaDia}
                           </Typography>
                         </Box>
                       </Stack>
 
-                      {/* PROGRESSO */}
+                      {/* CALCULOS DO DIA */}
                       <Box mt={2}>
-                        <Typography variant="caption" color="text.secondary">
-                          Processos ativos
-                        </Typography>
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          mb={0.5}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Cálculos do Dia
+                          </Typography>
+
+                          <Typography variant="caption" fontWeight={600}>
+                            {membro.alocadoDia}/{membro.metaDia}
+                          </Typography>
+                        </Stack>
 
                         <LinearProgress
                           variant="determinate"
-                          value={porcentagem}
+                          value={porcentagemDia}
                           sx={{
-                            mt: 0.5,
                             height: 6,
                             borderRadius: 5,
                             backgroundColor: "#F3F4F6",
                             "& .MuiLinearProgress-bar": {
-                              backgroundColor: corBarra,
+                              backgroundColor: corBarraDia,
+                            },
+                          }}
+                        />
+                      </Box>
+
+                      {/* CALCULOS DO MES */}
+                      <Box mt={2}>
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          mb={0.5}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Cálculos do Mês
+                          </Typography>
+
+                          <Typography variant="caption" fontWeight={600}>
+                            {membro.alocadoMes}/{membro.metaMes}
+                          </Typography>
+                        </Stack>
+
+                        <LinearProgress
+                          variant="determinate"
+                          value={porcentagemMes}
+                          sx={{
+                            height: 6,
+                            borderRadius: 5,
+                            backgroundColor: "#F3F4F6",
+                            "& .MuiLinearProgress-bar": {
+                              backgroundColor: corBarraMes,
                             },
                           }}
                         />
@@ -534,9 +564,7 @@ export default function DistribuicaoCarga() {
                             height: 8,
                             borderRadius: "50%",
                             bgcolor:
-                              membro.status === "Disponível"
-                                ? "#22C55E"
-                                : "#F59E0B",
+                              porcentagemDia >= 90 ? "#F59E0B" : "#22C55E",
                           }}
                         />
 
@@ -544,14 +572,14 @@ export default function DistribuicaoCarga() {
                           variant="caption"
                           fontWeight={600}
                           color={
-                            membro.status === "Disponível"
-                              ? "success.main"
-                              : "warning.main"
+                            porcentagemDia >= 90
+                              ? "warning.main"
+                              : "success.main"
                           }
                         >
-                          {membro.status === "Disponível"
-                            ? "DISPONÍVEL"
-                            : "LIMITE PRÓXIMO"}
+                          {porcentagemDia >= 90
+                            ? "LIMITE PRÓXIMO"
+                            : "DISPONÍVEL"}
                         </Typography>
                       </Stack>
                     </Paper>
