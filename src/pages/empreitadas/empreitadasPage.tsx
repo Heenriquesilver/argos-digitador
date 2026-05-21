@@ -404,7 +404,7 @@ export default function EmpreitadasPage() {
                 }}
               >
                 {rows.some((r) => r.parentId === params.row.id) ? (
-                  <VisibilityIcon sx={{ color: "#5c6cff" }} />
+                  <VisibilityIcon sx={{ color: "#30B2E4" }} />
                 ) : (
                   <VisibilityIcon />
                 )}
@@ -437,7 +437,7 @@ export default function EmpreitadasPage() {
         <Button
           onClick={() => setOpenFilter(!openFilter)}
           variant="contained"
-          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+          sx={{ bgcolor: "#30B2E4", py: 1.3 }}
         >
           Filtrar
         </Button>
@@ -445,7 +445,7 @@ export default function EmpreitadasPage() {
         <Button
           variant="contained"
           onClick={() => navigate("/novo-pacote")}
-          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+          sx={{ bgcolor: "#30B2E4", py: 1.3 }}
         >
           Criar Pacote
         </Button>
@@ -514,7 +514,7 @@ export default function EmpreitadasPage() {
                   value={
                     filtros.periodoInicio ? dayjs(filtros.periodoInicio) : null
                   }
-                  onChange={(v) =>
+                  onChange={(v: any) =>
                     setFiltros({
                       ...filtros,
                       periodoInicio: v ? v.format("YYYY-MM-DD") : "",
@@ -534,7 +534,7 @@ export default function EmpreitadasPage() {
                 <DatePicker
                   label="Término"
                   value={filtros.periodoFim ? dayjs(filtros.periodoFim) : null}
-                  onChange={(v) =>
+                  onChange={(v: any) =>
                     setFiltros({
                       ...filtros,
                       periodoFim: v ? v.format("YYYY-MM-DD") : "",
@@ -550,7 +550,7 @@ export default function EmpreitadasPage() {
               <Button
                 onClick={buscarEmpreitadas}
                 variant="contained"
-                sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+                sx={{ bgcolor: "#30B2E4", py: 1.3 }}
               >
                 Buscar
               </Button>
@@ -569,12 +569,13 @@ export default function EmpreitadasPage() {
         sx={{
           "& .MuiDataGrid-columnHeaderTitle": {
             fontWeight: "bold",
+            color: "white",
           },
           "& .cor-background-headerName": {
-            backgroundColor: "#E0E7FF",
+            backgroundColor: "#0A1C30",
           },
           "& .MuiDataGrid-columnHeaderCheckbox": {
-            backgroundColor: "#E0E7FF",
+            backgroundColor: "#0A1C30",
           },
         }}
         disableRowSelectionOnClick

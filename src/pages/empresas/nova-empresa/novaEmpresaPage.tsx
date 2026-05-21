@@ -252,7 +252,7 @@ export default function NovaEmpresaPage() {
                 variant="contained"
                 type="submit"
                 disabled={isSubmitting}
-                sx={{ bgcolor: "#5c6cff" }}
+                sx={{ bgcolor: "#30B2E4" }}
               >
                 {isSubmitting ? "Salvando..." : "Salvar"}
               </Button>

@@ -203,7 +203,7 @@ export default function NovaEquipePage() {
               variant="contained"
               onClick={salvarEquipe}
               disabled={!titulo || !lider || loading}
-              sx={{ bgcolor: "#5c6cff" }}
+              sx={{ bgcolor: "#30B2E4" }}
             >
               {isEdit ? "Atualizar" : "Salvar"}
             </Button>
