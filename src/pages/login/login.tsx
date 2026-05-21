@@ -1,210 +1,3 @@
-// import { useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { useAuth } from "../../auth/useAuth";
-
-// import {
-//   Box,
-//   Button,
-//   TextField,
-//   Typography,
-//   ToggleButton,
-//   ToggleButtonGroup,
-//   Paper,
-// } from "@mui/material";
-
-// import InputAdornment from "@mui/material/InputAdornment";
-// import Visibility from "@mui/icons-material/Visibility";
-// import VisibilityOff from "@mui/icons-material/VisibilityOff";
-// import IconButton from "@mui/material/IconButton";
-
-// export default function LoginPage() {
-//   const { loginPassword } = useAuth();
-//   const navigate = useNavigate();
-
-//   const [email, setEmail] = useState("");
-//   const [credential, setCredential] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState("");
-
-//   const [showPassword, setShowPassword] = useState(false);
-
-//   const handleLogin = async () => {
-//     setLoading(true);
-//     setError("");
-
-//     try {
-//       await loginPassword(email, credential);
-//       navigate("/calculo");
-//     } catch (err) {
-//       console.error("ERRO LOGIN:", err);
-//       setError("Falha no login. Verifique os dados.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <Box
-//       sx={{
-//         display: "flex",
-//         width: "100vw",
-//         height: "100vh",
-//         overflow: "hidden",
-//       }}
-//     >
-//       {/* 🌌 BACKGROUND ESQUERDO */}
-//       <Box
-//         sx={{
-//           flex: 1,
-//           display: { xs: "none", md: "block" },
-//           backgroundImage: "url('/images/bg-lexcalc.jpg')",
-//           backgroundSize: "100% 100%",
-//           backgroundPosition: "center",
-//           backgroundRepeat: "no-repeat",
-//         }}
-//       />
-
-//       {/* 📦 PAINEL DO FORMULÁRIO (DIREITA) */}
-//       <Box
-//         sx={{
-//           width: { xs: "100%", md: 420 },
-//           height: "100vh",
-//           bgcolor: "#f8fbff",
-//           display: "flex",
-//           justifyContent: "center",
-//           alignItems: "center",
-//           boxShadow: "-8px 0 30px rgba(0,0,0,0.08)",
-//         }}
-//       >
-//         <Paper
-//           component="form"
-//           onSubmit={(e) => {
-//             e.preventDefault();
-//             handleLogin();
-//           }}
-//           elevation={0}
-//           sx={{
-//             width: "100%",
-//             maxWidth: 340,
-//             textAlign: "center",
-//             p: 2,
-//             borderRadius: 4,
-//             bgcolor: "transparent",
-//           }}
-//         >
-//           {/* ESPAÇO PARA O LOGO */}
-//           <Box sx={{ height: 80 }} />
-
-//           <Box
-//             component="img"
-//             src="/images/bg-form-lexcalc.png"
-//             alt="Logo LexCalc"
-//             sx={{
-//               width: 190,
-//               height: "auto",
-//               display: "block",
-//               margin: "0 auto",
-//               transform: "scale(2.0)",
-//               transformOrigin: "center",
-//               mb: 13,
-//             }}
-//           />
-//           <ToggleButtonGroup
-//             value="signin"
-//             exclusive
-//             fullWidth
-//             sx={{
-//               bgcolor: "#eef2ff",
-//               borderRadius: 5,
-//               "& .MuiToggleButton-root": { border: "none", borderRadius: 5 },
-//               "& .Mui-selected": {
-//                 bgcolor: "#5c6cff !important",
-//                 color: "#fff !important",
-//                 boxShadow: "0 2px 8px rgba(92,108,255,0.35)",
-//                 "&:hover": {
-//                   bgcolor: "#5c6cff",
-//                 },
-//               },
-//             }}
-//           >
-//             <ToggleButton value="signin">Conectar</ToggleButton>
-//             <ToggleButton value="signup">Cadastrar</ToggleButton>
-//           </ToggleButtonGroup>
-//           {/* EMAIL */}
-//           <Box mt={3}>
-//             <Typography textAlign="left" fontSize={14} mb={1}>
-//               E-mail
-//             </Typography>
-//             <TextField
-//               fullWidth
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
-//               sx={{ bgcolor: "#fff", borderRadius: 3 }}
-//             />
-//           </Box>
-
-//           <Box mt={2}>
-//             <Typography textAlign="left" fontSize={14} mb={1}>
-//               Senha
-//             </Typography>
-//             <TextField
-//               type={showPassword ? "text" : "password"}
-//               fullWidth
-//               value={credential}
-//               onChange={(e) => setCredential(e.target.value)}
-//               sx={{ bgcolor: "#fff", borderRadius: 3 }}
-//               InputProps={{
-//                 endAdornment: (
-//                   <InputAdornment position="end">
-//                     <IconButton
-//                       onClick={() => setShowPassword((prev) => !prev)}
-//                       edge="end"
-//                     >
-//                       {showPassword ? <VisibilityOff /> : <Visibility />}
-//                     </IconButton>
-//                   </InputAdornment>
-//                 ),
-//               }}
-//             />
-//           </Box>
-//           <Box mt={1} textAlign="right">
-//             <Typography fontSize={13} color="#5c6cff">
-//               Esqueceu a senha ?
-//             </Typography>
-//           </Box>
-//           <Button
-//             fullWidth
-//             variant="contained"
-//             type="submit"
-//             sx={{
-//               mt: 2,
-//               bgcolor: "#5c6cff",
-//               py: 1.5,
-//               borderRadius: 5,
-//               textTransform: "none",
-//               fontSize: 16,
-//             }}
-//             onClick={handleLogin}
-//             disabled={loading}
-//           >
-//             {loading ? "loading..." : "Entrar"}
-//           </Button>
-//           <Typography mt={1.5} fontSize={12} color="gray" textAlign="center">
-//             Versão 3.2026.04.28
-//           </Typography>
-//           {error && (
-//             <Typography color="error" fontSize={14}>
-//               {error}
-//             </Typography>
-//           )}
-//           {/* <Typography fontSize={12} mt={3} color="gray">
-//             By continuing, you agree to our Terms of Service and Privacy Policy.
-//           </Typography> */}
-//         </Paper>
-//       </Box>
-//     </Box>
-//   );
-// }
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
@@ -214,15 +7,18 @@ import {
   Button,
   TextField,
   Typography,
-  ToggleButton,
-  ToggleButtonGroup,
-  Paper,
+  Divider,
+  IconButton,
 } from "@mui/material";
 
 import InputAdornment from "@mui/material/InputAdornment";
+
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import IconButton from "@mui/material/IconButton";
+
+import GoogleIcon from "@mui/icons-material/Google";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 export default function LoginPage() {
   const { loginPassword } = useAuth();
@@ -242,8 +38,8 @@ export default function LoginPage() {
       await loginPassword(email, credential);
       navigate("/calculos");
     } catch (err) {
-      console.error("ERRO LOGIN:", err);
-      setError("Dados inválidos para Conexão.");
+      console.error(err);
+      setError("Dados inválidos para conexão.");
     } finally {
       setLoading(false);
     }
@@ -252,188 +48,317 @@ export default function LoginPage() {
   return (
     <Box
       sx={{
-        display: "flex",
         width: "100vw",
         height: "100vh",
+        display: "flex",
         overflow: "hidden",
+        fontFamily: "'Inter', sans-serif",
+        bgcolor: "#0B1020",
       }}
     >
-      {/* 🌌 LADO ESQUERDO */}
+      {/* BARRA SUPERIOR (Ajustada para ocupar apenas o lado correto e não quebrar o layout) */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: 58,
+          background: "#111",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          px: 4,
+          boxSizing: "border-box",
+        }}
+      >
+        <Typography
+          sx={{
+            color: "#74BBF3",
+            fontSize: { xs: 16, sm: 20 },
+            fontWeight: 500,
+            letterSpacing: 1,
+          }}
+        >
+          BERNHOEFT CÁLCULOS JUDICIAIS
+        </Typography>
+      </Box>
+
+      {/* LADO ESQUERDO (BANNER) */}
       <Box
         sx={{
           flex: 1,
-          display: { xs: "none", md: "block" },
-          backgroundImage: "url('/images/bg-lexcalc.jpg')",
-          backgroundSize: "100% 100%",
+          display: { xs: "none", md: "flex" },
+          flexDirection: "column",
+          justifyContent: "space-between",
+          color: "#fff",
+          width: "200%",
+          backgroundImage: `url('/images/bg-argos.jpeg')`,
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
-        }}
-      />
+          backgroundSize: "100% 100%",
 
-      {/* 📦 FORMULÁRIO */}
+          bgcolor: "#0B1020",
+        }}
+      ></Box>
+
+      {/* SEÇÃO DO FORMULÁRIO (Fixado a largura e centralizado) */}
       <Box
         sx={{
-          width: { xs: "100%", sm: 360, md: 420 },
-          height: "100vh",
-          px: { xs: 2, sm: 3 },
-          bgcolor: "#f8fbff",
+          width: { xs: "100%", md: 470 },
+          minWidth: { md: 470 }, // Garante que o container não encolha de lado no notebook
+          bgcolor: "#FFFFFF",
           display: "flex",
-          justifyContent: "center",
           alignItems: "center",
-          boxShadow: "-8px 0 30px rgba(0,0,0,0.08)",
+          justifyContent: "center",
+          px: { xs: 3, sm: 6 },
+          pt: 7, // Compensa a altura da barra preta do topo
+          height: "100%",
+          boxSizing: "border-box",
         }}
       >
-        <Paper
+        <Box
           component="form"
           onSubmit={(e) => {
             e.preventDefault();
             handleLogin();
           }}
-          elevation={0}
           sx={{
             width: "100%",
-            maxWidth: { xs: 280, sm: 320, md: 340 },
-            textAlign: "center",
-            p: { xs: 1.5, sm: 2 },
-            borderRadius: 4,
-            bgcolor: "transparent",
+            maxWidth: 360,
+            maxHeight: "calc(100vh - 90px)", // Evita estouro vertical em notebooks menores
+            overflowY: "auto",
+            overflowX: "hidden", // Evita qualquer quebra de largura para a direita
+            pr: 0.5,
+            "&::-webkit-scrollbar": { width: "5px" },
+            "&::-webkit-scrollbar-thumb": {
+              bgcolor: "#E5E7EB",
+              borderRadius: "10px",
+            },
           }}
         >
-          {/* LOGO */}
-          <Box
-            component="img"
-            src="/images/bg-form-lexcalc.png"
-            alt="Logo"
+          <Typography
             sx={{
-              width: { xs: 140, sm: 180, md: 280 },
-              height: "auto",
-              display: "block",
-              margin: "0 auto",
-              mb: { xs: 2, sm: 3, md: 4 },
+              fontSize: { xs: 24, sm: 30 },
+              fontWeight: 800,
+              color: "#111827",
+              mb: 0.5,
+            }}
+          >
+            Bem-vindo, Líder
+          </Typography>
+          <Typography
+            sx={{
+              color: "#6B7280",
+              mb: { xs: 3, lg: 4 },
+              fontSize: { xs: 15, sm: 17 },
+            }}
+          >
+            Insira suas credenciais para entrar.
+          </Typography>
+          {/* EMAIL */}
+          <Typography
+            sx={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: 3,
+              color: "#9CA3AF",
+              mb: 1,
+            }}
+          >
+            ENDEREÇO DE E-MAIL
+          </Typography>
+          <TextField
+            fullWidth
+            placeholder="alex.argos@argosai.io"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            sx={{
+              mb: { xs: 2, lg: 2.5 },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 3,
+                bgcolor: "#F9FAFB",
+                height: 50,
+              },
+            }}
+          />
+          {/* SENHA */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              mb: 1,
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: 3,
+                color: "#9CA3AF",
+              }}
+            >
+              SENHA
+            </Typography>
+
+            <Typography
+              sx={{
+                fontSize: 13,
+                color: "#69A7FF",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Esqueceu?
+            </Typography>
+          </Box>
+          <TextField
+            fullWidth
+            type={showPassword ? "text" : "password"}
+            value={credential}
+            onChange={(e) => setCredential(e.target.value)}
+            sx={{
+              mb: 1.5,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 3,
+                bgcolor: "#F9FAFB",
+                height: 50,
+              },
+            }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
             }}
           />
 
-          {/* TOGGLE */}
-          <ToggleButtonGroup
-            value="signin"
-            exclusive
-            fullWidth
+          {/* <FormControlLabel
+            control={<Checkbox />}
+            label="Lembrar por 30 dias"
             sx={{
-              bgcolor: "#eef2ff",
-              borderRadius: 5,
-              "& .MuiToggleButton-root": {
-                border: "none",
-                borderRadius: 5,
-                fontSize: { xs: 12, sm: 13, md: 14 },
-                py: { xs: 0.8, sm: 1 },
-              },
-              "& .Mui-selected": {
-                bgcolor: "#5c6cff !important",
-                color: "#fff !important",
-                boxShadow: "0 2px 8px rgba(92,108,255,0.35)",
+              mb: { xs: 2, lg: 3 },
+              color: "#4B5563",
+              "& .MuiFormControlLabel-label": {
+                fontSize: 14,
               },
             }}
-          >
-            <ToggleButton value="signin">Conectar</ToggleButton>
-            <ToggleButton value="signup">Cadastrar</ToggleButton>
-          </ToggleButtonGroup>
-
-          {/* EMAIL */}
-          <Box mt={{ xs: 2, sm: 3 }}>
-            <Typography
-              textAlign="left"
-              fontSize={{ xs: 12, sm: 13, md: 14 }}
-              mb={1}
-            >
-              E-mail
-            </Typography>
-            <TextField
-              fullWidth
-              size="small"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              sx={{ bgcolor: "#fff", borderRadius: 3 }}
-            />
-          </Box>
-
-          {/* SENHA */}
-          <Box mt={{ xs: 1.5, sm: 2 }}>
-            <Typography
-              textAlign="left"
-              fontSize={{ xs: 12, sm: 13, md: 14 }}
-              mb={1}
-            >
-              Senha
-            </Typography>
-            <TextField
-              type={showPassword ? "text" : "password"}
-              fullWidth
-              size="small"
-              value={credential}
-              onChange={(e) => setCredential(e.target.value)}
-              sx={{ bgcolor: "#fff", borderRadius: 3 }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      edge="end"
-                      size="small"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Box>
-
-          {/* ESQUECEU SENHA */}
-          <Box mt={1} textAlign="right">
-            <Typography fontSize={{ xs: 11, sm: 12, md: 13 }} color="#5c6cff">
-              Esqueceu a senha?
-            </Typography>
-          </Box>
-
+          /> */}
           {/* BOTÃO */}
           <Button
             fullWidth
-            variant="contained"
             type="submit"
-            onClick={handleLogin}
+            variant="contained"
             disabled={loading}
+            endIcon={<ArrowForwardIcon />}
             sx={{
-              mt: { xs: 1.5, sm: 2 },
-              bgcolor: "#5c6cff",
-              py: { xs: 1, sm: 1.2, md: 1.5 },
-              borderRadius: 5,
+              height: 50,
+              borderRadius: 3,
+              bgcolor: "#091227",
+              fontSize: 16,
+              fontWeight: 700,
+              mt: "65px",
               textTransform: "none",
-              fontSize: { xs: 13, sm: 14, md: 16 },
+              boxShadow: "none",
+              "&:hover": {
+                bgcolor: "#111C35",
+                boxShadow: "none",
+              },
             }}
           >
-            {loading ? "Carregando..." : "Entrar"}
+            {loading ? "Entrando..." : "ENTRAR"}
           </Button>
+          {/* DIVIDER */}
+          <Box sx={{ my: { xs: 2, lg: 2.5 } }}>
+            <Divider>
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  color: "#9CA3AF",
+                  fontWeight: 700,
+                  letterSpacing: 2,
+                }}
+              >
+                OU CONTINUE COM
+              </Typography>
+            </Divider>
+          </Box>
+          {/* SOCIAL */}
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              disabled
+              startIcon={<GoogleIcon />}
+              sx={{
+                height: 46,
+                borderRadius: 3,
+                borderColor: "#E5E7EB",
+                color: "#111827",
+                textTransform: "none",
+                fontWeight: 600,
+              }}
+            >
+              Google
+            </Button>
 
-          {/* VERSÃO */}
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<GitHubIcon />}
+              disabled
+              sx={{
+                height: 46,
+                borderRadius: 3,
+                borderColor: "#E5E7EB",
+                color: "#111827",
+                textTransform: "none",
+                fontWeight: 600,
+              }}
+            >
+              GitHub
+            </Button>
+          </Box>
+          {/* FOOTER */}
           <Typography
-            mt={1.5}
-            fontSize={{ xs: 10, sm: 11, md: 12 }}
-            color="gray"
+            sx={{
+              mt: { xs: 3, lg: 4 },
+              textAlign: "center",
+              color: "#6B7280",
+              fontSize: 14,
+            }}
           >
-            Versão 3.2026.05.12
+            Não tem uma conta?{" "}
+            <span
+              style={{
+                color: "#69A7FF",
+                fontWeight: 700,
+                // cursor: "pointer",
+              }}
+            >
+              Criar conta
+            </span>
           </Typography>
-
-          {/* ERRO */}
           {error && (
             <Typography
               color="error"
-              fontSize={{ xs: 12, sm: 13, md: 14 }}
-              mt={1}
+              sx={{
+                mt: 2,
+                textAlign: "center",
+                fontSize: 14,
+              }}
             >
               {error}
             </Typography>
           )}
-        </Paper>
+        </Box>
       </Box>
     </Box>
   );

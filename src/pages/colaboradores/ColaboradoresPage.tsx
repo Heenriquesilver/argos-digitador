@@ -218,7 +218,7 @@ export default function ColaboradoresPage() {
             onClick={handleBuscar}
             disabled={loading}
             sx={{
-              bgcolor: "#5c6cff",
+              bgcolor: "#30B2E4",
               px: 7,
               height: "55px",
             }}
@@ -231,7 +231,7 @@ export default function ColaboradoresPage() {
         <Button
           variant="contained"
           sx={{
-            bgcolor: "#5c6cff",
+            bgcolor: "#30B2E4",
             px: 5,
             height: "55px",
           }}
@@ -258,9 +258,10 @@ export default function ColaboradoresPage() {
           sx={{
             "& .MuiDataGrid-columnHeaderTitle": {
               fontWeight: "bold",
+              color: "white",
             },
             "& .cor-background-headerName": {
-              backgroundColor: "#E0E7FF",
+              backgroundColor: "#0A1C30",
             },
           }}
         />

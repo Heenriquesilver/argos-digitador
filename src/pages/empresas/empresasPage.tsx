@@ -210,14 +210,14 @@ export default function EmpresasPage() {
             variant="contained"
             onClick={handleBuscar}
             disabled={loading}
-            sx={{ bgcolor: "#5c6cff", px: 7, height: "55px" }}
+            sx={{ bgcolor: "#30B2E4", px: 7, height: "55px" }}
           >
             Buscar
           </Button>
         </Box>
         <Button
           variant="contained"
-          sx={{ bgcolor: "#5c6cff", px: 5, height: "55px" }}
+          sx={{ bgcolor: "#30B2E4", px: 5, height: "55px" }}
           onClick={() => navigate("/nova-empresa")}
         >
           Adicionar Empresa
@@ -251,8 +251,11 @@ export default function EmpresasPage() {
             pagination: { paginationModel: { pageSize: 10, page: 0 } },
           }}
           sx={{
-            "& .MuiDataGrid-columnHeaderTitle": { fontWeight: "bold" },
-            "& .cor-background-headerName": { backgroundColor: "#E0E7FF" },
+            "& .MuiDataGrid-columnHeaderTitle": {
+              fontWeight: "bold",
+              color: "white",
+            },
+            "& .cor-background-headerName": { backgroundColor: "#0A1C30" },
           }}
         />
         <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
@@ -260,12 +263,11 @@ export default function EmpresasPage() {
             onClick={() => {
               if (selectedRow) {
                 console.log("selectedRow antes do navigate:", selectedRow);
-                // Envia para a página de edição com idEntidade incluso
+
                 navigate(`/empresas/${selectedRow.id}/editar`, {
                   state: {
                     ...selectedRow,
                     idEntidade: selectedRow.idEntidade ?? selectedRow.id,
-                    // Garante que idEntidade esteja preenchido
                   },
                 });
               }

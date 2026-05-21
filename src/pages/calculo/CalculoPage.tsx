@@ -550,7 +550,7 @@ export default function CalculoPage() {
           <Button
             variant="contained"
             // startIcon={<AddIcon />}
-            sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+            sx={{ bgcolor: "#30B2E4", py: 1.3 }}
             onClick={() => navigate("/distribuicao-carga")}
           >
             Carga de trabalho
@@ -602,7 +602,7 @@ export default function CalculoPage() {
       <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
         <Button
           variant="contained"
-          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+          sx={{ bgcolor: "#30B2E4", py: 1.3 }}
           onClick={() => {
             const idsSelecionados = Array.isArray(selectionModel)
               ? selectionModel
@@ -622,7 +622,7 @@ export default function CalculoPage() {
           variant="contained"
           //   startIcon={<FilterListIcon />}
           disabled={selectionModel.ids.size === 0}
-          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+          sx={{ bgcolor: "#30B2E4", py: 1.3 }}
           onClick={() => {
             const idsSelecionados = Array.from(selectionModel.ids);
 
@@ -639,7 +639,7 @@ export default function CalculoPage() {
         <Button
           variant="contained"
           startIcon={<FilterListIcon />}
-          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+          sx={{ bgcolor: "#30B2E4", py: 1.3 }}
           onClick={() => setOpenFilter(!openFilter)}
         >
           Filtrar
@@ -748,7 +748,7 @@ export default function CalculoPage() {
             <Grid item xs={12} display="flex" justifyContent="flex-end">
               <Button
                 variant="contained"
-                sx={{ bgcolor: "#5c6cff" }}
+                sx={{ bgcolor: "#30B2E4" }}
                 onClick={buscarCalculos}
                 disabled={loading}
               >
@@ -792,12 +792,14 @@ export default function CalculoPage() {
           sx={{
             "& .MuiDataGrid-columnHeaderTitle": {
               fontWeight: "bold",
+              color: "white",
             },
             "& .cor-background-headerName": {
-              backgroundColor: "#E0E7FF",
+              backgroundColor: "#0A1C30",
             },
             "& .MuiDataGrid-columnHeaderCheckbox": {
-              backgroundColor: "#E0E7FF",
+              backgroundColor: "#0A1C30",
+              color: "white",
             },
           }}
         />
@@ -922,7 +924,7 @@ export default function CalculoPage() {
                       <Button
                         size="small"
                         variant="contained"
-                        sx={{ bgcolor: "#5c6cff" }}
+                        sx={{ bgcolor: "#30B2E4" }}
                         onClick={() => atribuirProcesso(proc)}
                       >
                         Atribuir
@@ -991,7 +993,7 @@ export default function CalculoPage() {
               <Box display="flex" justifyContent="flex-end" mt={2}>
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: "#5c6cff" }}
+                  sx={{ bgcolor: "#30B2E4" }}
                   onClick={criarPacoteItens}
                 >
                   Salvar

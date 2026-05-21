@@ -33,10 +33,10 @@ export default function HomePage() {
       <Grid container alignItems="center" mb={4}>
         <Grid item xs={12} md={6}>
           <Typography variant="h5" fontWeight={600} color="text.primary">
-            Welcome Back, {user?.pessoaFisica.nome || user?.email}
+            Bem-Vindo, {user?.pessoaFisica.nome || user?.email}
           </Typography>
           <Typography color="text.secondary">
-            Here is a summary of the performance of your intelligent agents.
+            Painel de informações da sua equipe.
           </Typography>
         </Grid>
 
@@ -52,9 +52,9 @@ export default function HomePage() {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+              sx={{ bgcolor: "#30B2E4", py: 1.3 }}
             >
-              Create New Agent
+              Cadastar Processo
             </Button>
             <Button
               variant="contained"
@@ -64,7 +64,7 @@ export default function HomePage() {
                 bgcolor: "white",
               }}
             >
-              Start Workflow
+              CÁLCULOS
             </Button>
           </Stack>
         </Grid>

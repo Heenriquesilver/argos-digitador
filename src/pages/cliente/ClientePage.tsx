@@ -269,11 +269,36 @@ export default function ClientePage() {
   ];
 
   const columnsEmpresas: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 90 },
-    { field: "nome", headerName: "Nome", flex: 1 },
-    { field: "cnpj", headerName: "CNPJ", flex: 1 },
-    { field: "cidade", headerName: "Cidade", flex: 1 },
-    { field: "uf", headerName: "UF", width: 90 },
+    {
+      field: "id",
+      headerName: "ID",
+      width: 90,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "nome",
+      headerName: "Nome",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "cnpj",
+      headerName: "CNPJ",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "cidade",
+      headerName: "Cidade",
+      flex: 1,
+      headerClassName: "cor-background-headerName",
+    },
+    {
+      field: "uf",
+      headerName: "UF",
+      width: 90,
+      headerClassName: "cor-background-headerName",
+    },
   ];
 
   const columnsClientes: GridColDef[] = [
@@ -281,27 +306,32 @@ export default function ClientePage() {
       field: "idReal",
       headerName: "ID",
       flex: 0.3,
-      renderCell: (params) => params.value ?? "", // 👈 se não tiver, fica vazio
+      headerClassName: "cor-background-headerName",
+      renderCell: (params) => params.value ?? "",
     },
     {
       field: "nome",
       headerName: "Nome Fantasia",
       flex: 1,
+      headerClassName: "cor-background-headerName",
     },
     {
       field: "cnpj",
       headerName: "CNPJ",
       flex: 0.8,
+      headerClassName: "cor-background-headerName",
     },
     {
       field: "cidade",
       headerName: "Cidade",
       flex: 0.6,
+      headerClassName: "cor-background-headerName",
     },
     {
       field: "uf",
       headerName: "UF",
       flex: 0.3,
+      headerClassName: "cor-background-headerName",
     },
     {
       field: "acoes",
@@ -311,6 +341,7 @@ export default function ClientePage() {
       flex: 0.4,
       align: "right",
       headerAlign: "right",
+      headerClassName: "cor-background-headerName",
       renderCell: (params) => (
         <Box
           display="flex"
@@ -402,6 +433,18 @@ export default function ClientePage() {
                   paginationModel: { pageSize: 10, page: 0 },
                 },
               }}
+              sx={{
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  fontWeight: "bold",
+                  color: "white",
+                },
+                "& .cor-background-headerName": {
+                  backgroundColor: "#0A1C30",
+                },
+                "& .MuiDataGrid-columnHeaderCheckbox": {
+                  backgroundColor: "#E0E7FF",
+                },
+              }}
             />
           </Grid>
 
@@ -436,7 +479,7 @@ export default function ClientePage() {
               </Box>
               <Button
                 variant="contained"
-                sx={{ bgcolor: "#5c6cff", px: 4, height: "50px" }}
+                sx={{ bgcolor: "#30B2E4", px: 4, height: "50px" }}
                 onClick={abrirModal}
               >
                 Adicionar Cliente
@@ -459,6 +502,15 @@ export default function ClientePage() {
               //     fontWeight: 600,
               //   },
               // }}
+              sx={{
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  fontWeight: "bold",
+                  color: "white",
+                },
+                "& .cor-background-headerName": {
+                  backgroundColor: "#0A1C30",
+                },
+              }}
             />
           </Grid>
         </Grid>
@@ -538,7 +590,7 @@ export default function ClientePage() {
             <Button
               variant="contained"
               onClick={buscarEmpresas}
-              sx={{ bgcolor: "#5c6cff" }}
+              sx={{ bgcolor: "#30B2E4" }}
             >
               Buscar
             </Button>
@@ -600,7 +652,7 @@ export default function ClientePage() {
                 disabled={
                   empresasSelecionadas.length === 0 || !equipeSelecionada
                 }
-                sx={{ bgcolor: "#5c6cff", width: "150px" }}
+                sx={{ bgcolor: "#30B2E4", width: "150px" }}
               >
                 Incluir
               </Button>

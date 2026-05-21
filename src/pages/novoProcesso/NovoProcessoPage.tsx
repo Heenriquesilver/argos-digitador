@@ -357,7 +357,7 @@ export default function NovoProcessoPage() {
                   endAdornment: (
                     <Button
                       variant="contained"
-                      sx={{ bgcolor: "#5c6cff", ml: 1 }}
+                      sx={{ bgcolor: "#30B2E4", ml: 1 }}
                       onClick={buscarCliente}
                     >
                       Buscar
@@ -384,7 +384,7 @@ export default function NovoProcessoPage() {
             <Paper
               variant="outlined"
               sx={{
-                border: "2px solid #5c6cff",
+                border: "2px solid #30B2E4",
                 borderRadius: 2,
               }}
             >
@@ -418,7 +418,7 @@ export default function NovoProcessoPage() {
                   MenuProps: {
                     PaperProps: {
                       sx: {
-                        border: "2px solid #5c6cff",
+                        border: "2px solid #30B2E4",
                         borderRadius: 2,
                       },
                     },
@@ -442,7 +442,7 @@ export default function NovoProcessoPage() {
                   MenuProps: {
                     PaperProps: {
                       sx: {
-                        border: "2px solid #5c6cff",
+                        border: "2px solid #30B2E4",
                         borderRadius: 2,
                       },
                     },
@@ -468,7 +468,7 @@ export default function NovoProcessoPage() {
                 MenuProps: {
                   PaperProps: {
                     sx: {
-                      border: "2px solid #5c6cff",
+                      border: "2px solid #30B2E4",
                       borderRadius: 2,
                     },
                   },
@@ -486,7 +486,7 @@ export default function NovoProcessoPage() {
           {tribunais.length > 0 && (
             <Paper
               variant="outlined"
-              sx={{ border: "2px solid #5c6cff", borderRadius: 2 }}
+              sx={{ border: "2px solid #30B2E4", borderRadius: 2 }}
             >
               <List>
                 {tribunais.map((t) => (
@@ -536,7 +536,7 @@ export default function NovoProcessoPage() {
                 endAdornment: (
                   <Button
                     variant="contained"
-                    sx={{ bgcolor: "#5c6cff", ml: 1 }}
+                    sx={{ bgcolor: "#30B2E4", ml: 1 }}
                     onClick={buscarTribunal}
                   >
                     Buscar
@@ -565,7 +565,7 @@ export default function NovoProcessoPage() {
                 label="Data da Solicitação "
                 format="DD/MM/YYYY"
                 value={dataSolicitacao ? dayjs(dataSolicitacao) : null}
-                onChange={(newValue) =>
+                onChange={(newValue: any) =>
                   setDataSolicitacao(
                     newValue ? newValue.format("YYYY-MM-DD") : "",
                   )
@@ -586,7 +586,7 @@ export default function NovoProcessoPage() {
                 label="Prazo Fatal"
                 format="DD/MM/YYYY"
                 value={prazoFatal ? dayjs(prazoFatal) : null}
-                onChange={(newValue) =>
+                onChange={(newValue: any) =>
                   setPrazoFatal(newValue ? newValue.format("YYYY-MM-DD") : "")
                 }
                 sx={{ width: 220 }}
@@ -605,7 +605,7 @@ export default function NovoProcessoPage() {
                 label="Data Negociada"
                 format="DD/MM/YYYY"
                 value={dataNegociada ? dayjs(dataNegociada) : null}
-                onChange={(newValue) =>
+                onChange={(newValue: any) =>
                   setDataNeogciada(
                     newValue ? newValue.format("YYYY-MM-DD") : "",
                   )
@@ -621,11 +621,11 @@ export default function NovoProcessoPage() {
 
             <FormControl
               sx={{
-                minWidth: 0, // 🔥 ESSENCIAL pra permitir encolher dentro do flex
+                minWidth: 0,
                 flexShrink: 1,
               }}
             >
-              <FormLabel sx={{ color: "#5c6cff", fontSize: 12 }}>
+              <FormLabel sx={{ color: "#30B2E4", fontSize: 12 }}>
                 Prioridade
               </FormLabel>
 
@@ -633,14 +633,14 @@ export default function NovoProcessoPage() {
                 value={prioridade}
                 row
                 sx={{
-                  flexWrap: "nowrap", // 👈 NÃO quebra linha
-                  overflow: "hidden", // 👈 evita estourar container
+                  flexWrap: "nowrap",
+                  overflow: "hidden",
                   "& .MuiFormControlLabel-root": {
                     marginRight: 1,
                   },
                   "& .MuiFormControlLabel-label": {
                     fontSize: 12,
-                    whiteSpace: "nowrap", // 👈 evita quebrar texto
+                    whiteSpace: "nowrap",
                   },
                 }}
               >
@@ -679,7 +679,7 @@ export default function NovoProcessoPage() {
 
             <Button
               variant="contained"
-              sx={{ bgcolor: "#5c6cff" }}
+              sx={{ bgcolor: "#30B2E4" }}
               onClick={salvarProcesso}
             >
               Salvar Processo

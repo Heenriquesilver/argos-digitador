@@ -235,7 +235,7 @@ export default function NovoPacotePage() {
                 <DatePicker
                   label="Prazo"
                   value={prazo ? dayjs(prazo) : null}
-                  onChange={(newValue) =>
+                  onChange={(newValue: any) =>
                     setPrazo(newValue ? newValue.format("YYYY-MM-DD") : "")
                   }
                   sx={{ width: 300 }}

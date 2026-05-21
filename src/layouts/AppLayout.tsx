@@ -22,6 +22,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import { useAuth } from "../auth/useAuth";
+import { Button } from "@mui/material";
 
 const drawerWidth = 240;
 
@@ -51,7 +52,7 @@ const menuItems = [
   },
   { label: "Empreitadas", icon: <PeopleIcon />, path: "/empreitadas" },
   {
-    label: "Medicoes",
+    label: "Faturômetro",
     icon: <PeopleIcon />,
     path: "/profissionais",
     disabled: true,
@@ -79,15 +80,15 @@ export default function AppLayout() {
 
   const menuItemStyle = {
     "&:hover": {
-      bgcolor: "#5c6cff",
+      bgcolor: "#30B2E4",
       color: "#fff",
       "& .MuiListItemIcon-root": { color: "#fff" },
     },
     "&.Mui-selected": {
-      bgcolor: "#5c6cff",
+      bgcolor: "#30B2E4",
       color: "#fff",
       "& .MuiListItemIcon-root": { color: "#fff" },
-      "&:hover": { bgcolor: "#5c6cff" },
+      "&:hover": { bgcolor: "#30B2E4" },
     },
   };
 
@@ -107,9 +108,9 @@ export default function AppLayout() {
         position="fixed"
         elevation={0}
         sx={{
-          bgcolor: "#fff",
-          color: "#1e293b",
-          borderBottom: "1px solid #e5e7eb",
+          bgcolor: "#0A1C30",
+          color: "white",
+          borderBottom: "1px solid #0A1C30",
           zIndex: 1201,
         }}
       >
@@ -118,17 +119,86 @@ export default function AppLayout() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <Box
               component="img"
-              src="/images/KolpyAI_Icone_App.png"
+              src="/images/argos-icone.jpeg"
               sx={{ height: 32 }}
             />
 
-            <Typography
-              fontWeight={700}
-              fontSize={20}
-              sx={{ color: "#5c6cff" }}
-            >
-              LexCalc - Lider
+            <Typography fontWeight={700} fontSize={20}>
+              <span style={{ color: "#30B2E4" }}>Argos</span>
+              <span>AI</span>{" "}
+              <span style={{ color: "#30B2E4" }}>Flow - Líder</span>
             </Typography>
+          </Box>
+          <Box>
+            <Button
+              sx={{
+                backgroundColor: "black",
+                color: "white",
+                border: "1px solid #0A1C30",
+              }}
+            >
+              ARGOS
+            </Button>
+            <Button
+              sx={{
+                backgroundColor: "black",
+                color: "white",
+                marginLeft: "5px",
+                border: "1px solid #0A1C30",
+              }}
+            >
+              Docs
+            </Button>
+            <Button
+              sx={{
+                backgroundColor: "black",
+                color: "white",
+                marginLeft: "5px",
+                border: "1px solid #0A1C30",
+              }}
+            >
+              FINDER
+            </Button>
+            <Button
+              sx={{
+                backgroundColor: "black",
+                color: "white",
+                marginLeft: "5px",
+                border: "1px solid #0A1C30",
+              }}
+            >
+              PJECalc
+            </Button>
+            <Button
+              sx={{
+                backgroundColor: "black",
+                color: "white",
+                marginLeft: "5px",
+                border: "1px solid #0A1C30",
+              }}
+            >
+              AUDIT
+            </Button>
+            <Button
+              sx={{
+                backgroundColor: "black",
+                color: "white",
+                marginLeft: "5px",
+                border: "1px solid #0A1C30",
+              }}
+            >
+              PARECER
+            </Button>
+            <Button
+              sx={{
+                backgroundColor: "black",
+                color: "white",
+                marginLeft: "5px",
+                border: "1px solid #0A1C30",
+              }}
+            >
+              CALCULADO
+            </Button>
           </Box>
 
           {/* USUÁRIO */}
@@ -156,11 +226,11 @@ export default function AppLayout() {
           onClick={handleMenu}
           disableRipple
           sx={{
-            bgcolor: open ? "#fff" : "#5c6cff",
+            bgcolor: open ? "#fff" : "#30B2E4",
             color: open ? "#000" : "#fff",
             boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
             "&:hover": {
-              bgcolor: "#5c6cff",
+              bgcolor: "#30B2E4",
               color: "#fff",
             },
             "&:focus": {
@@ -186,6 +256,7 @@ export default function AppLayout() {
             width: drawerWidth,
             top: "64px",
             height: "calc(100vh - 64px)",
+            backgroundColor: "#0A1C30",
             borderRight: "1px solid #e5e7eb",
           },
         }}
@@ -209,11 +280,11 @@ export default function AppLayout() {
                   }),
                 }}
               >
-                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemIcon sx={{ color: "white" }}>{item.icon}</ListItemIcon>
                 <ListItemText
                   primary={item.label}
                   sx={{
-                    ...(item.disabled && { color: "#999" }),
+                    ...(item.disabled ? { color: "#999" } : { color: "white" }),
                   }}
                 />
               </ListItemButton>
@@ -230,9 +301,9 @@ export default function AppLayout() {
               sx={{ ...menuItemStyle, mt: 2 }}
             >
               <ListItemIcon>
-                <LogoutIcon />
+                <LogoutIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="Sair" />
+              <ListItemText sx={{ color: "white" }} primary="Sair" />
             </ListItemButton>
           </ListItem>
         </List>
@@ -245,7 +316,7 @@ export default function AppLayout() {
           flexGrow: 1,
           mt: "64px",
           height: "100%",
-          overflowY: "hidden", // 👈 apenas vertical
+          overflowY: "hidden",
           overflowX: "hidden",
           p: 3,
           marginLeft: open ? `${drawerWidth}px` : 0,

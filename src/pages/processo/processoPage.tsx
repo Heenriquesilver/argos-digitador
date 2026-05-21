@@ -398,7 +398,7 @@ export default function ProcessoPage() {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+          sx={{ bgcolor: "#30B2E4", py: 1.3 }}
           onClick={() => navigate("/novo-processo")}
         >
           Novo Processo
@@ -407,7 +407,7 @@ export default function ProcessoPage() {
           variant="contained"
           //   startIcon={<FilterListIcon />}
           disabled={selectionModel.ids.size === 0}
-          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+          sx={{ bgcolor: "#30B2E4", py: 1.3 }}
           onClick={() => {
             const idsSelecionados = Array.from(selectionModel.ids);
 
@@ -425,7 +425,7 @@ export default function ProcessoPage() {
         <Button
           variant="contained"
           startIcon={<FilterListIcon />}
-          sx={{ bgcolor: "#5c6cff", py: 1.3 }}
+          sx={{ bgcolor: "#30B2E4", py: 1.3 }}
           onClick={() => setOpenFilter(!openFilter)}
         >
           Filtrar
@@ -487,7 +487,7 @@ export default function ProcessoPage() {
                   value={
                     filtros.periodoInicio ? dayjs(filtros.periodoInicio) : null
                   }
-                  onChange={(newValue) =>
+                  onChange={(newValue: any) =>
                     setFiltros({
                       ...filtros,
                       periodoInicio: newValue
@@ -512,7 +512,7 @@ export default function ProcessoPage() {
                 <DatePicker
                   label="Período Fim"
                   value={filtros.prazo ? dayjs(filtros.prazo) : null}
-                  onChange={(newValue) =>
+                  onChange={(newValue: any) =>
                     setFiltros({
                       ...filtros,
                       prazo: newValue ? newValue.format("YYYY-MM-DD") : "",
@@ -541,14 +541,14 @@ export default function ProcessoPage() {
             <Grid item xs={12} display="flex" justifyContent="flex-end" gap={1}>
               <Button
                 variant="contained"
-                sx={{ bgcolor: "#5c6cff" }}
+                sx={{ bgcolor: "#30B2E4" }}
                 onClick={limparFiltro}
               >
                 Limpar
               </Button>
               <Button
                 variant="contained"
-                sx={{ bgcolor: "#5c6cff" }}
+                sx={{ bgcolor: "#30B2E4" }}
                 onClick={aplicarFiltros}
               >
                 Aplicar
@@ -585,9 +585,10 @@ export default function ProcessoPage() {
           sx={{
             "& .MuiDataGrid-columnHeaderTitle": {
               fontWeight: "bold",
+              color: "white",
             },
             "& .cor-background-headerName": {
-              backgroundColor: "#E0E7FF",
+              backgroundColor: "#0A1C30",
             },
             "& .MuiDataGrid-columnHeaderCheckbox": {
               backgroundColor: "#E0E7FF",

@@ -284,11 +284,13 @@ export default function EquipePage() {
       field: "id",
       headerName: "ID",
       width: 90,
+      headerClassName: "cor-background-headerName",
     },
     {
       field: "nome",
       headerName: "Nome",
       flex: 1,
+      headerClassName: "cor-background-headerName",
     },
   ];
 
@@ -329,7 +331,7 @@ export default function EquipePage() {
         return (
           <span
             style={{
-              color: isRoxo ? "#5c6cff" : "inherit",
+              color: isRoxo ? "#30B2E4" : "inherit",
               fontWeight: isRoxo ? 600 : 400,
             }}
           >
@@ -442,7 +444,7 @@ export default function EquipePage() {
             >
               <Button
                 variant="contained"
-                sx={{ bgcolor: "#5c6cff", px: 4, height: "50px" }}
+                sx={{ bgcolor: "#30B2E4", px: 4, height: "50px" }}
                 onClick={() => navigate("/equipe/nova")}
               >
                 Adicionar Equipe
@@ -459,6 +461,18 @@ export default function EquipePage() {
               initialState={{
                 pagination: {
                   paginationModel: { pageSize: 10, page: 0 },
+                },
+              }}
+              sx={{
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  fontWeight: "bold",
+                  color: "white",
+                },
+                "& .cor-background-headerName": {
+                  backgroundColor: "#0A1C30",
+                },
+                "& .MuiDataGrid-columnHeaderCheckbox": {
+                  backgroundColor: "#E0E7FF",
                 },
               }}
             />
@@ -485,7 +499,7 @@ export default function EquipePage() {
               </Box>
               <Button
                 variant="contained"
-                sx={{ bgcolor: "#5c6cff", px: 4, height: "50px" }}
+                sx={{ bgcolor: "#30B2E4", px: 4, height: "50px" }}
                 onClick={abrirModal}
               >
                 Adicionar Membro
@@ -503,9 +517,15 @@ export default function EquipePage() {
                 Number(params.row.maturidadeId) === 5 ? "linha-roxa" : ""
               }
               sx={{
-                "& .linha-roxa": {
-                  color: "#5c6cff",
-                  fontWeight: 600,
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  fontWeight: "bold",
+                  color: "white",
+                },
+                "& .cor-background-headerName": {
+                  backgroundColor: "#0A1C30",
+                },
+                "& .MuiDataGrid-columnHeaderCheckbox": {
+                  backgroundColor: "#E0E7FF",
                 },
               }}
             />
@@ -587,7 +607,7 @@ export default function EquipePage() {
             <Button
               variant="contained"
               onClick={buscarPessoas}
-              sx={{ bgcolor: "#5c6cff" }}
+              sx={{ bgcolor: "#30B2E4" }}
             >
               Buscar
             </Button>
@@ -609,9 +629,18 @@ export default function EquipePage() {
                 const selectedIds = Array.from(newSelection.ids).map(Number);
                 setPessoasSelecionadas(selectedIds);
               }}
+              // sx={{
+              //   "& .MuiDataGrid-row.Mui-selected": {
+              //     backgroundColor: "#e3f2fd !important",
+              //   },
+              // }}
               sx={{
-                "& .MuiDataGrid-row.Mui-selected": {
-                  backgroundColor: "#e3f2fd !important",
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  fontWeight: "bold",
+                  color: "white",
+                },
+                "& .cor-background-headerName": {
+                  backgroundColor: "#0A1C30",
                 },
               }}
             />
@@ -711,7 +740,7 @@ export default function EquipePage() {
                   !equipeSelecionada ||
                   !maturidadeSelecionada
                 }
-                sx={{ bgcolor: "#5c6cff", width: "150px" }}
+                sx={{ bgcolor: "#30B2E4", width: "150px" }}
               >
                 Incluir
               </Button>

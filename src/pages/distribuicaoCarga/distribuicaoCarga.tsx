@@ -4,7 +4,6 @@ import {
   Button,
   Stack,
   Chip,
-  IconButton,
   Paper,
   Avatar,
   LinearProgress,
@@ -17,6 +16,11 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import SnackInfo from "../../components/snack-info/SnackInfo";
 
 import { useLocation } from "react-router-dom";
+
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { ptBR } from "date-fns/locale";
 
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ScheduleIcon from "@mui/icons-material/Schedule";
@@ -50,14 +54,13 @@ type TCargaEquipe = {
 };
 
 export default function DistribuicaoCarga() {
-  // const [pessoas, setPessoas] = useState<any[]>([]);
-
   const [equipes, setEquipes] = useState<any[]>([]);
   const [equipeSelecionada, setEquipeSelecionada] = useState<number | null>(
     null,
   );
   const [membrosEquipe, setMembrosEquipe] = useState<any[]>([]);
   const [membroSelecionado, setMembroSelecionado] = useState("");
+  const [dataSelecionada, setDataSelecionada] = useState<Date>(new Date());
 
   const [cargaEquipe, setCargaEquipe] = useState<TCargaEquipe[]>([]);
 
@@ -124,13 +127,14 @@ export default function DistribuicaoCarga() {
     }
   };
 
-  const fetchCargaEquipe = async (equipeId: number) => {
+  const fetchCargaEquipe = async (
+    equipeId: number,
+    data: Date = dataSelecionada,
+  ) => {
     try {
-      const hoje = new Date();
-
-      const dia = hoje.getDate();
-      const mes = hoje.getMonth() + 1;
-      const ano = hoje.getFullYear();
+      const dia = data.getDate();
+      const mes = data.getMonth() + 1;
+      const ano = data.getFullYear();
 
       const response = await api.get("/api/v1/datainfo-equipe/carga-trabalho", {
         params: {
@@ -167,7 +171,13 @@ export default function DistribuicaoCarga() {
       };
 
       await api.post("/api/v1/calculo-judicial", payload);
+
+      if (equipeSelecionada) {
+        await fetchCargaEquipe(equipeSelecionada, dataSelecionada);
+      }
+
       showSnack("Processo atribuído com sucesso!", "success");
+
       setProcessos((prev) => prev.filter((p) => p.id !== proc.id));
     } catch (error) {
       console.error("Erro ao atribuir processo", error);
@@ -175,14 +185,14 @@ export default function DistribuicaoCarga() {
     }
   };
 
-  const dataAtual = new Date()
-    .toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "short",
-    })
-    .replace(".", "");
+  // const dataAtual = dataSelecionada
+  //   .toLocaleDateString("pt-BR", {
+  //     day: "2-digit",
+  //     month: "short",
+  //   })
+  //   .replace(".", "");
 
-  const dataFormatada = dataAtual.charAt(0).toUpperCase() + dataAtual.slice(1);
+  // const dataFormatada = dataAtual.charAt(0).toUpperCase() + dataAtual.slice(1);
 
   return (
     <Box
@@ -210,15 +220,55 @@ export default function DistribuicaoCarga() {
           display="flex"
           justifyContent={{ xs: "flex-start", md: "flex-end" }}
         >
-          <Stack direction="row" spacing={2}>
-            <Button variant="contained" sx={{ bgcolor: "#5c6cff" }}>
-              Hoje, {dataFormatada}
-            </Button>
+          <LocalizationProvider
+            dateAdapter={AdapterDateFns}
+            adapterLocale={ptBR}
+          >
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Button
+                variant="contained"
+                startIcon={<CalendarTodayIcon />}
+                sx={{
+                  bgcolor: "#30B2E4",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 2,
+                }}
+              >
+                {dataSelecionada.toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </Button>
 
-            <IconButton>
-              <CalendarTodayIcon />
-            </IconButton>
-          </Stack>
+              <DatePicker
+                value={dataSelecionada}
+                onChange={(novaData: any) => {
+                  if (!novaData) return;
+
+                  setDataSelecionada(novaData);
+
+                  if (equipeSelecionada) {
+                    fetchCargaEquipe(equipeSelecionada, novaData);
+                  }
+                }}
+                slots={{
+                  openPickerIcon: CalendarTodayIcon,
+                }}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: {
+                      width: 0,
+                      opacity: 0,
+                      position: "absolute",
+                    },
+                  },
+                }}
+              />
+            </Stack>
+          </LocalizationProvider>
         </Grid>
       </Grid>
       <Grid container spacing={2} mb={3}>
@@ -283,7 +333,7 @@ export default function DistribuicaoCarga() {
                 setEquipeSelecionada(id);
 
                 fetchMembrosEquipe(id);
-                fetchCargaEquipe(id);
+                fetchCargaEquipe(id, dataSelecionada);
 
                 setMembroSelecionado("");
               }}
@@ -350,7 +400,7 @@ export default function DistribuicaoCarga() {
                     <Button
                       size="small"
                       variant="contained"
-                      sx={{ bgcolor: "#5c6cff" }}
+                      sx={{ bgcolor: "#30B2E4" }}
                       onClick={() => atribuirProcesso(proc)}
                     >
                       Atribuir
@@ -401,7 +451,7 @@ export default function DistribuicaoCarga() {
 
               <Stack direction="row" spacing={2}>
                 {[
-                  { label: "Disponível", color: "#22C55E" },
+                  { label: "Disponível", color: "#F59E0B" },
                   { label: "Normal", color: "#4F46E5" },
                   { label: "Sobrecarregado", color: "#F59E0B" },
                 ].map((item) => (
@@ -443,7 +493,7 @@ export default function DistribuicaoCarga() {
                     ? "#F59E0B"
                     : porcentagemDia >= 60
                       ? "#4F46E5"
-                      : "#22C55E";
+                      : "#F59E0B";
 
                 const corBarraMes =
                   porcentagemMes >= 90

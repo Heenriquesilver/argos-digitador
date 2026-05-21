@@ -211,7 +211,7 @@ export default function NovoColaboradorPage() {
                 label="Data de Nascimento"
                 format="DD/MM/YYYY"
                 value={dtNascto ? dayjs(dtNascto) : null}
-                onChange={(newValue) =>
+                onChange={(newValue: any) =>
                   setDtNascto(newValue ? newValue.format("YYYY-MM-DD") : "")
                 }
                 sx={{ width: 300 }}
