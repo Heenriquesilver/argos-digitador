@@ -18,57 +18,56 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
 import EventIcon from "@mui/icons-material/Event";
-import PeopleIcon from "@mui/icons-material/People";
+// import PeopleIcon from "@mui/icons-material/People";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import { useAuth } from "../auth/useAuth";
-import { Button } from "@mui/material";
 
 const drawerWidth = 240;
 
 // Menu items configuráveis
 const menuItems = [
-  { label: "Home", icon: <HomeIcon />, path: "/home" },
-  { label: "Processos", icon: <EventIcon />, path: "/processo" },
-  { label: "Calculos", icon: <PeopleIcon />, path: "/calculos" },
+  { label: "Home", icon: <HomeIcon />, path: "/home", disabled: true },
+  { label: "Tarefas", icon: <EventIcon />, path: "/tarefa" },
+  // { label: "Calculos", icon: <PeopleIcon />, path: "/calculos" },
 
-  {
-    label: "Documentos",
-    icon: <PeopleIcon />,
-    path: "/documentos",
-    disabled: true,
-  },
-  {
-    label: "Comunicacao",
-    icon: <PeopleIcon />,
-    path: "/comunicacao",
-    disabled: true,
-  },
-  {
-    label: "Qualidade",
-    icon: <PeopleIcon />,
-    path: "/profissionais",
-    disabled: true,
-  },
-  { label: "Empreitadas", icon: <PeopleIcon />, path: "/empreitadas" },
-  {
-    label: "Faturômetro",
-    icon: <PeopleIcon />,
-    path: "/profissionais",
-    disabled: true,
-  },
+  // {
+  //   label: "Documentos",
+  //   icon: <PeopleIcon />,
+  //   path: "/documentos",
+  //   disabled: true,
+  // },
+  // {
+  //   label: "Comunicacao",
+  //   icon: <PeopleIcon />,
+  //   path: "/comunicacao",
+  //   disabled: true,
+  // },
+  // {
+  //   label: "Qualidade",
+  //   icon: <PeopleIcon />,
+  //   path: "/profissionais",
+  //   disabled: true,
+  // },
+  // { label: "Empreitadas", icon: <PeopleIcon />, path: "/empreitadas" },
+  // {
+  //   label: "Faturômetro",
+  //   icon: <PeopleIcon />,
+  //   path: "/profissionais",
+  //   disabled: true,
+  // },
 
-  { label: "Equipe", icon: <PeopleIcon />, path: "/equipe" },
-  { label: "Clientes", icon: <PeopleIcon />, path: "/cliente" },
-  {
-    label: "Contratos",
-    icon: <PeopleIcon />,
-    path: "/profissionais",
-    disabled: true,
-  },
-  { label: "Cartilhas", icon: <PeopleIcon />, path: "/profissionais" },
-  { label: "Empresas", icon: <PeopleIcon />, path: "/empresas" },
-  { label: "Colaboradores", icon: <PeopleIcon />, path: "/colaboradores" },
+  // { label: "Equipe", icon: <PeopleIcon />, path: "/equipe" },
+  // { label: "Clientes", icon: <PeopleIcon />, path: "/cliente" },
+  // {
+  //   label: "Contratos",
+  //   icon: <PeopleIcon />,
+  //   path: "/profissionais",
+  //   disabled: true,
+  // },
+  // { label: "Cartilhas", icon: <PeopleIcon />, path: "/profissionais" },
+  // { label: "Empresas", icon: <PeopleIcon />, path: "/empresas" },
+  // { label: "Colaboradores", icon: <PeopleIcon />, path: "/colaboradores" },
 ];
 
 export default function AppLayout() {
@@ -79,19 +78,43 @@ export default function AppLayout() {
   const usuario = localStorage.getItem("usuario");
 
   const menuItemStyle = {
+    borderRadius: "12px",
+    margin: "4px 10px",
+    transition: "0.3s",
+
     "&:hover": {
-      bgcolor: "#30B2E4",
+      bgcolor: "rgba(48, 178, 228, 0.15)",
       color: "#fff",
-      "& .MuiListItemIcon-root": { color: "#fff" },
+
+      "& .MuiListItemIcon-root": {
+        color: "#30B2E4",
+      },
     },
+
     "&.Mui-selected": {
-      bgcolor: "#30B2E4",
+      bgcolor: "rgba(48, 178, 228, 0.18)",
       color: "#fff",
-      "& .MuiListItemIcon-root": { color: "#fff" },
-      "&:hover": { bgcolor: "#30B2E4" },
+
+      "& .MuiListItemIcon-root": {
+        color: "#30B2E4",
+      },
+
+      "&:hover": {
+        bgcolor: "rgba(48, 178, 228, 0.25)",
+      },
+
+      // bolinha no final
+      "&::after": {
+        content: '""',
+        position: "absolute",
+        right: "12px",
+        width: "8px",
+        height: "8px",
+        borderRadius: "50%",
+        backgroundColor: "#30B2E4",
+      },
     },
   };
-
   const handleMenu = () => {
     setOpen(!open);
   };
@@ -126,79 +149,8 @@ export default function AppLayout() {
             <Typography fontWeight={700} fontSize={20}>
               <span style={{ color: "#30B2E4" }}>Argos</span>
               <span>AI</span>{" "}
-              <span style={{ color: "#30B2E4" }}>Flow - Líder</span>
+              <span style={{ color: "#30B2E4" }}>Flow - Digitador</span>
             </Typography>
-          </Box>
-          <Box>
-            <Button
-              sx={{
-                backgroundColor: "black",
-                color: "white",
-                border: "1px solid #0A1C30",
-              }}
-            >
-              ARGOS
-            </Button>
-            <Button
-              sx={{
-                backgroundColor: "black",
-                color: "white",
-                marginLeft: "5px",
-                border: "1px solid #0A1C30",
-              }}
-            >
-              Docs
-            </Button>
-            <Button
-              sx={{
-                backgroundColor: "black",
-                color: "white",
-                marginLeft: "5px",
-                border: "1px solid #0A1C30",
-              }}
-            >
-              FINDER
-            </Button>
-            <Button
-              sx={{
-                backgroundColor: "black",
-                color: "white",
-                marginLeft: "5px",
-                border: "1px solid #0A1C30",
-              }}
-            >
-              PJECalc
-            </Button>
-            <Button
-              sx={{
-                backgroundColor: "black",
-                color: "white",
-                marginLeft: "5px",
-                border: "1px solid #0A1C30",
-              }}
-            >
-              AUDIT
-            </Button>
-            <Button
-              sx={{
-                backgroundColor: "black",
-                color: "white",
-                marginLeft: "5px",
-                border: "1px solid #0A1C30",
-              }}
-            >
-              PARECER
-            </Button>
-            <Button
-              sx={{
-                backgroundColor: "black",
-                color: "white",
-                marginLeft: "5px",
-                border: "1px solid #0A1C30",
-              }}
-            >
-              CALCULADO
-            </Button>
           </Box>
 
           {/* USUÁRIO */}

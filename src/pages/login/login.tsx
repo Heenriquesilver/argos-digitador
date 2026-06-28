@@ -36,7 +36,7 @@ export default function LoginPage() {
 
     try {
       await loginPassword(email, credential);
-      navigate("/calculos");
+      navigate("/tarefa");
     } catch (err) {
       console.error(err);
       setError("Dados inválidos para conexão.");
@@ -56,7 +56,6 @@ export default function LoginPage() {
         bgcolor: "#0B1020",
       }}
     >
-      {/* BARRA SUPERIOR (Ajustada para ocupar apenas o lado correto e não quebrar o layout) */}
       <Box
         sx={{
           position: "absolute",
@@ -146,7 +145,7 @@ export default function LoginPage() {
               mb: 0.5,
             }}
           >
-            Bem-vindo, Líder
+            Bem-vindo, Digitador
           </Typography>
           <Typography
             sx={{

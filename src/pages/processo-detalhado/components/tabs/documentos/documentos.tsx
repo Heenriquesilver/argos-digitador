@@ -4,6 +4,7 @@ import Menu from "@mui/material/Menu";
 import { useState } from "react";
 import type { GridColDef } from "@mui/x-data-grid";
 import { DataGrid } from "@mui/x-data-grid";
+import { ptBR } from "@mui/x-data-grid/locales";
 
 type TDocumentosRow = {
   id: number;
@@ -14,37 +15,6 @@ type TDocumentosRow = {
 };
 
 const Documentos = () => {
-  const rows = [
-    {
-      id: 1,
-      tipoDocumento: "Cálculo Inicial",
-      link: "/documentos/LC-2023-099.pdf",
-      dataHora: "24/10/2023 14:35",
-      usuario: "Ana Souza",
-    },
-    {
-      id: 2,
-      tipoDocumento: "Petição Inicial",
-      link: "/docs/peticao-inicial.pdf",
-      dataHora: "22/10/2023 11:20",
-      usuario: "Mariana Alves",
-    },
-    {
-      id: 3,
-      tipoDocumento: "Contestação",
-      link: "/docs/contestacao.pdf",
-      dataHora: "21/10/2023 16:45",
-      usuario: "João Pereira",
-    },
-    {
-      id: 4,
-      tipoDocumento: "Planilha de Cálculo",
-      link: "/docs/planilha-calculo.xlsx",
-      dataHora: "20/10/2023 08:10",
-      usuario: "Fernanda Rocha",
-    },
-  ];
-
   const columns: GridColDef<TDocumentosRow>[] = [
     {
       field: "id",
@@ -116,23 +86,24 @@ const Documentos = () => {
       <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
         <Button
           variant="contained"
-          sx={{ bgcolor: "#5c6cff", py: 1.0 }}
+          sx={{ bgcolor: "#0A1C30", height: "35px", marginTop: "9px" }}
           //   onClick={}
         >
           Incluir Documento
         </Button>
         <Button
           variant="contained"
-          sx={{ bgcolor: "#5c6cff", py: 1.0 }}
+          sx={{ bgcolor: "#0A1C30", height: "35px", marginTop: "9px" }}
           //   onClick={() => setOpenFilter(!openFilter)}
         >
           Excluir Documento
         </Button>
       </Box>
       <DataGrid
-        rows={rows}
+        rows={[]}
         columns={columns}
         pageSizeOptions={[5]}
+        localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
         initialState={{
           pagination: {
             paginationModel: { pageSize: 5, page: 0 },
@@ -141,9 +112,10 @@ const Documentos = () => {
         sx={{
           "& .MuiDataGrid-columnHeaderTitle": {
             fontWeight: "bold",
+            color: "white",
           },
           "& .cor-background-headerName": {
-            backgroundColor: "#E0E7FF",
+            backgroundColor: "#184272ff",
           },
         }}
       />

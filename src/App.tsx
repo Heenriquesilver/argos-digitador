@@ -6,7 +6,7 @@ import LoginPage from "./pages/login/login";
 import HomePage from "./pages/home/home";
 import ExecutionCenterPage from "./pages/executionCenter/execucionCenterPage";
 import NovoProcessoPage from "./pages/novoProcesso/NovoProcessoPage";
-import ProcessoPage from "./pages/processo/processoPage";
+import TarefaPage from "./pages/tarefa/TarefaPage";
 import DocumentosPage from "./pages/documentos/documentos";
 import DistribuicaoCarga from "./pages/distribuicaoCarga/distribuicaoCarga";
 import EmpresasPage from "./pages/empresas/empresasPage";
@@ -18,7 +18,7 @@ import NovoColaboradorPage from "./pages/novo-colaborador/novoColaborador";
 import NovoUsuarioPage from "./pages/novo-usuario/novoUsuario";
 import EmpreitadasPage from "./pages/empreitadas/empreitadasPage";
 import NovoPacotePage from "./pages/novo-pacote/novoPacote";
-import CalculoDetalhesPage from "./pages/processo-detalhado/CalculoDetalhesPage";
+
 import EditarMembroEquipePage from "./pages/editar-membro-equipe/EditarMembroEquipePage";
 import NovaEquipePage from "./pages/nova-equipe/NovaEquipePage";
 import ClientePage from "./pages/cliente/ClientePage";
@@ -28,6 +28,7 @@ import PerfilPage from "./pages/perfil/perfilPage";
 import PrivateRoute from "./routes/privateRoute";
 import AppLayout from "./layouts/AppLayout";
 import AlterarSenhaPage from "./pages/alterar-senha/alterarSenhaPage";
+import TarefaDetalhesPage from "./pages/processo-detalhado/CalculoDetalhesPage";
 
 export default function App() {
   return (
@@ -48,7 +49,7 @@ export default function App() {
             <Route path="/home" element={<HomePage />} />
             <Route path="/execution-center" element={<ExecutionCenterPage />} />
             <Route path="/novo-processo" element={<NovoProcessoPage />} />
-            <Route path="/processo" element={<ProcessoPage />} />
+            <Route path="/tarefa" element={<TarefaPage />} />
             <Route path="/documentos" element={<DocumentosPage />} />
             <Route path="/distribuicao-carga" element={<DistribuicaoCarga />} />
             <Route path="/empresas" element={<EmpresasPage />} />
@@ -66,7 +67,7 @@ export default function App() {
             <Route path="/novo-usuario/:id" element={<NovoUsuarioPage />} />
             <Route path="/empreitadas" element={<EmpreitadasPage />} />
             <Route path="/novo-pacote" element={<NovoPacotePage />} />
-            <Route path="/calculo/:id" element={<CalculoDetalhesPage />} />
+            <Route path="/tarefa/:id" element={<TarefaDetalhesPage />} />
             <Route path="/processo/editar/:id" element={<NovoProcessoPage />} />
             <Route
               path="/membro-equipe/:id/editar"

@@ -1,10 +1,29 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 
-createRoot(document.getElementById('root')!).render(
+import "./index.css";
+import App from "./App.tsx";
+
+const theme = createTheme({
+  typography: {
+    fontFamily: "Poppins, sans-serif",
+
+    fontWeightRegular: 400,
+    fontWeightMedium: 500,
+
+    button: {
+      fontFamily: "Poppins, sans-serif",
+      fontWeight: 500,
+      textTransform: "none",
+    },
+  },
+});
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <ThemeProvider theme={theme}>
+      <App />
+    </ThemeProvider>
   </StrictMode>,
-)
+);
